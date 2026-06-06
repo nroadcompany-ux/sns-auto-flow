@@ -1,54 +1,34 @@
-import { NextResponse } from "next/server";
-import { generateContent } from "@/lib/ai/generate";
-import { prisma } from "@/lib/prisma";
-import type { GenerateRequest, GenerateResponse, Platform } from "@/types";
+import { NextRequest, NextResponse } from "next/server"
+import { generateContent, diversifyTopics, extractFromSource } from "@/lib/ai/generate"
 
-export const runtime = "nodejs";
-
-const VALID_PLATFORMS: Platform[] = ["instagram", "threads", "blog", "x"];
-
-export async function POST(req: Request) {
-  let body: GenerateRequest;
+export async function POST(req: NextRequest) {
   try {
-    body = (await req.json()) as GenerateRequest;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+    const { topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency } = await req.json()
+    let plans: any[] = []
 
-  if (!body.topic || !body.topic.trim()) {
-    return NextResponse.json({ error: "topic is required" }, { status: 400 });
-  }
-  if (!VALID_PLATFORMS.includes(body.platform)) {
-    body.platform = "instagram";
-  }
-
-  try {
-    const { content, demo } = await generateContent(body);
-
-    let id: string | undefined;
-    try {
-      const saved = await prisma.content.create({
-        data: {
-          topic: body.topic.trim(),
-          title: content.title,
-          body: content.body,
-          hashtags: content.hashtags.join(" "),
-          platform: body.platform,
-          tone: body.tone ?? "friendly",
-          status: "draft",
-        },
-      });
-      id = saved.id;
-    } catch (dbErr) {
-      // Persisting a draft is best-effort; never block generation on the DB.
-      console.error("[content/generate] DB save failed:", dbErr);
+    if (sourceType === "DIVERSIFIED") {
+      plans = await diversifyTopics({ topic, count, startDate, frequency })
+    } else if (sourceType === "URL" || sourceType === "FILE") {
+      const ex = await extractFromSource(sourceContent)
+      plans = [{ index: 1, angle: "일반", topic: ex.mainTopic, keywords: ex.keyPoints }]
+    } else {
+      plans = [{ index: 1, angle: "일반", topic, keywords: [] }]
     }
 
-    const payload: GenerateResponse = { id, demo, ...content };
-    return NextResponse.json(payload);
-  } catch (err) {
-    console.error("[content/generate] error:", err);
-    const message = err instanceof Error ? err.message : "generation failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const results = []
+    for (const plan of plans.slice(0, count)) {
+      const content = await generateContent({
+        topic: plan.topic || topic,
+        keywords: Array.isArray(plan.keywords) ? plan.keywords.join(", ") : keywords,
+        tone: tone || "friendly",
+        index: plan.index,
+        total: count,
+        angle: plan.angle,
+      })
+      results.push({ ...plan, content })
+    }
+    return NextResponse.json({ success: true, results })
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
   }
 }

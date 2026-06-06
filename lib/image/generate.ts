@@ -1,89 +1,75 @@
-import { promises as fs } from "fs";
-import path from "path";
-import crypto from "crypto";
-import sharp from "sharp";
-import type { ImageResponse } from "@/types";
+import { IBrand } from "@/types"
 
-const OUTPUT_DIR = path.join(process.cwd(), "public", "generated");
+export type TImageSize = "square" | "landscape" | "portrait"
 
-/**
- * Render a branded card image from a text prompt and save it under
- * /public/generated. Returns a public URL the browser can load directly.
- *
- * This uses `sharp` to rasterize an SVG, so it works fully offline — no
- * external image API needed. Swap `buildSvg` for a real text-to-image call
- * later without changing the route.
- */
-export async function generateImage(
-  prompt: string,
-  width = 1080,
-  height = 1080
-): Promise<ImageResponse> {
-  await fs.mkdir(OUTPUT_DIR, { recursive: true });
-  const id = crypto.randomUUID();
-  const file = path.join(OUTPUT_DIR, `${id}.png`);
-  const svg = buildSvg(prompt, width, height);
-
-  await sharp(Buffer.from(svg)).png().toFile(file);
-
-  return { id, url: `/generated/${id}.png`, width, height };
+const SIZES = {
+  square:    { w: 1080, h: 1080 },
+  landscape: { w: 1200, h: 630 },
+  portrait:  { w: 1080, h: 1350 },
 }
 
-function buildSvg(prompt: string, width: number, height: number): string {
-  const lines = wrapText(prompt, 18).slice(0, 6);
-  const fontSize = Math.round(width / 16);
-  const lineHeight = Math.round(fontSize * 1.25);
-  const startY = height / 2 - ((lines.length - 1) * lineHeight) / 2;
-
-  const tspans = lines
-    .map(
-      (line, i) =>
-        `<tspan x="50%" y="${startY + i * lineHeight}">${escapeXml(line)}</tspan>`
-    )
-    .join("");
-
-  return `
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="50%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#ec4899"/>
-    </linearGradient>
-  </defs>
-  <rect width="${width}" height="${height}" fill="url(#bg)"/>
-  <rect x="${width * 0.06}" y="${height * 0.06}" width="${width * 0.88}" height="${height * 0.88}"
-        rx="${width * 0.04}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="3"/>
-  <text fill="#ffffff" font-family="Arial, 'Apple SD Gothic Neo', sans-serif"
-        font-size="${fontSize}" font-weight="700" text-anchor="middle"
-        dominant-baseline="middle">${tspans}</text>
-  <text x="50%" y="${height - height * 0.08}" fill="rgba(255,255,255,0.85)"
-        font-family="Arial, sans-serif" font-size="${Math.round(fontSize * 0.45)}"
-        text-anchor="middle">SNS FLOW AUTO</text>
-</svg>`.trim();
-}
-
-function wrapText(text: string, maxPerLine: number): string[] {
-  const words = text.trim().split(/\s+/);
-  const lines: string[] = [];
-  let current = "";
+export function generateSVGImage({
+  headline, subtext, brand, size = "square",
+}: {
+  headline: string; subtext?: string; brand: IBrand; size?: TImageSize
+}) {
+  const { w, h } = SIZES[size]
+  const maxChars = Math.floor(w / 38)
+  const words = headline.split(" ")
+  const lines: string[] = []
+  let line = ""
   for (const word of words) {
-    if ((current + " " + word).trim().length > maxPerLine && current) {
-      lines.push(current.trim());
-      current = word;
-    } else {
-      current = (current + " " + word).trim();
-    }
+    if ((line + word).length > maxChars) { lines.push(line.trim()); line = word + " " }
+    else line += word + " "
   }
-  if (current) lines.push(current.trim());
-  return lines.length ? lines : [text];
+  if (line.trim()) lines.push(line.trim())
+
+  const startY = h * 0.36
+  const lineH = 86
+
+  const titleSVG = lines.map((l, i) =>
+    `<text x="64" y="${startY + i * lineH}" font-family="Pretendard,sans-serif" font-size="72" font-weight="800" fill="#111111">${l}</text>`
+  ).join("\n  ")
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${w}" height="${h}" fill="#ffffff"/>
+  <rect x="0" y="0" width="${w}" height="16" fill="${brand.color}"/>
+  <rect x="0" y="${h - 16}" width="${w}" height="16" fill="${brand.color}"/>
+  <circle cx="${w + 80}" cy="${h + 80}" r="${w * 0.58}" fill="${brand.color}" opacity="0.05"/>
+  <circle cx="-80" cy="-80" r="${w * 0.32}" fill="${brand.color}" opacity="0.04"/>
+  ${titleSVG}
+  ${subtext ? `<text x="64" y="${startY + lines.length * lineH + 44}" font-family="Pretendard,sans-serif" font-size="36" fill="#666666">${subtext}</text>` : ""}
+  <text x="64" y="${h - 56}" font-family="Pretendard,sans-serif" font-size="28" font-weight="700" fill="${brand.color}">${brand.name}</text>
+</svg>`
 }
 
-function escapeXml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+export async function generateCanvaImage({
+  templateId, headline, subtext, apiKey,
+}: {
+  templateId: string; headline: string; subtext?: string; apiKey: string
+}) {
+  const res = await fetch("https://api.canva.com/rest/v1/autofills", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      brand_template_id: templateId,
+      data: {
+        headline: { type: "text", text: headline },
+        subtext:  { type: "text", text: subtext || "" },
+      },
+    }),
+  })
+  return res.json()
+}
+
+export function generateImage({
+  engine, headline, subtext, brand, size,
+}: {
+  engine: "custom" | "canva"; headline: string; subtext?: string; brand: IBrand; size?: TImageSize
+}) {
+  if (engine === "canva" && brand.canvaApiKey && brand.templateId) {
+    return generateCanvaImage({ templateId: brand.templateId, headline, subtext, apiKey: brand.canvaApiKey })
+  }
+  return generateSVGImage({ headline, subtext, brand, size })
 }

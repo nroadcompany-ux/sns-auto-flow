@@ -1,68 +1,92 @@
-import axios from "axios";
-import type { PublishRequest } from "@/types";
+import { TChannel } from "@/types"
 
-interface PublishResult {
-  ok: boolean;
-  externalUrl: string | null;
-  demo: boolean;
-  error?: string;
+interface IPublishPayload {
+  channel: TChannel
+  title?: string
+  body: string
+  imageUrl?: string
+  hashtags?: string[]
 }
 
-/**
- * Publish a post to the target SNS platform via the PayPlay publish API.
- *
- * When the PayPlay credentials are still the dev placeholders, this returns a
- * simulated success ("demo" mode) so the end-to-end flow works locally without
- * hitting a real network. Replace PAYPLAY_API_BASE / PAYPLAY_API_SECRET in
- * .env.local with real values to switch to live publishing.
- */
-export async function publishToSns(req: PublishRequest): Promise<PublishResult> {
-  const base = process.env.PAYPLAY_API_BASE ?? "";
-  const secret = process.env.PAYPLAY_API_SECRET ?? "";
+async function publishInstagram(p: IPublishPayload) {
+  const token = process.env.META_ACCESS_TOKEN
+  if (!token) throw new Error("Meta 토큰 미설정")
+  const caption = `${p.body}\n\n${p.hashtags?.join(" ") || ""}`
+  const r = await fetch("https://graph.instagram.com/v18.0/me/media", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image_url: p.imageUrl, caption, access_token: token }),
+  })
+  const media = await r.json()
+  await fetch("https://graph.instagram.com/v18.0/me/media_publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creation_id: media.id, access_token: token }),
+  })
+  return { success: true }
+}
 
-  const isPlaceholder =
-    !base ||
-    !secret ||
-    base.includes("example.com") ||
-    secret.includes("REPLACE_ME");
+async function publishThreads(p: IPublishPayload) {
+  const token = process.env.META_ACCESS_TOKEN
+  if (!token) throw new Error("Meta 토큰 미설정")
+  const r = await fetch("https://graph.threads.net/v1.0/me/threads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ media_type: p.imageUrl ? "IMAGE" : "TEXT", text: p.body, image_url: p.imageUrl, access_token: token }),
+  })
+  const media = await r.json()
+  await fetch("https://graph.threads.net/v1.0/me/threads_publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creation_id: media.id, access_token: token }),
+  })
+  return { success: true }
+}
 
-  if (isPlaceholder) {
-    const slug = encodeURIComponent(req.title.slice(0, 40).replace(/\s+/g, "-"));
-    return {
-      ok: true,
-      demo: true,
-      externalUrl: `https://demo.local/${req.platform}/${slug}`,
-    };
-  }
+async function publishKakao(p: IPublishPayload) {
+  const key = process.env.KAKAO_CLIENT_ID
+  if (!key) throw new Error("카카오 키 미설정")
+  await fetch("https://kapi.kakao.com/v2/api/talk/memo/default/send", {
+    method: "POST",
+    headers: { Authorization: `KakaoAK ${key}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      template_object: JSON.stringify({
+        object_type: "feed",
+        content: {
+          title: p.title || "",
+          description: p.body,
+          image_url: p.imageUrl || "",
+          link: { web_url: process.env.PAYPLAY_API_URL || "" },
+        },
+      }),
+    }),
+  })
+  return { success: true }
+}
 
+async function publishPayplay(p: IPublishPayload, board: "blog" | "press") {
+  const { PAYPLAY_API_URL, PAYPLAY_API_SECRET } = process.env
+  if (!PAYPLAY_API_URL) throw new Error("페이플레이 URL 미설정")
+  await fetch(`${PAYPLAY_API_URL}/api/posts/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-secret": PAYPLAY_API_SECRET || "" },
+    body: JSON.stringify({ board, title: p.title, body: p.body, imageUrl: p.imageUrl, tags: p.hashtags }),
+  })
+  return { success: true }
+}
+
+export async function publish(payload: IPublishPayload) {
   try {
-    const res = await axios.post(
-      `${base.replace(/\/$/, "")}/publish`,
-      {
-        platform: req.platform,
-        title: req.title,
-        body: req.body,
-        hashtags: req.hashtags ?? [],
-        imageUrl: req.imageUrl ?? null,
-      },
-      {
-        headers: { Authorization: `Bearer ${secret}` },
-        timeout: 15000,
-      }
-    );
-    const data = res.data as { url?: string; permalink?: string };
-    return {
-      ok: true,
-      demo: false,
-      externalUrl: data.url ?? data.permalink ?? null,
-    };
-  } catch (err) {
-    const message =
-      axios.isAxiosError(err) && err.response
-        ? `${err.response.status} ${JSON.stringify(err.response.data)}`
-        : err instanceof Error
-          ? err.message
-          : "unknown error";
-    return { ok: false, demo: false, externalUrl: null, error: message };
+    switch (payload.channel) {
+      case "INSTAGRAM":     return { ...(await publishInstagram(payload)), channel: payload.channel }
+      case "THREADS":       return { ...(await publishThreads(payload)), channel: payload.channel }
+      case "KAKAO_CHANNEL": return { ...(await publishKakao(payload)), channel: payload.channel }
+      case "PAYPLAY_BLOG":  return { ...(await publishPayplay(payload, "blog")), channel: payload.channel }
+      case "PAYPLAY_PRESS": return { ...(await publishPayplay(payload, "press")), channel: payload.channel }
+      default:
+        return { success: false, channel: payload.channel, fallback: true, reason: "API 미연동 — 소재 보관함 저장됨" }
+    }
+  } catch (e: any) {
+    return { success: false, channel: payload.channel, fallback: true, error: e.message }
   }
 }

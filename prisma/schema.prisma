@@ -1,49 +1,74 @@
-// SNS FLOW AUTO — Prisma schema
-// Local dev uses SQLite (zero external DB needed). Swap `provider` to
-// "postgresql" + a real DATABASE_URL when moving to production.
-
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-/// A generated SNS post moving through the draft → scheduled → published flow.
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  contents  Content[]
+  brand     Brand?
+}
+enum Role { USER ADMIN SUPER_ADMIN }
+model Brand {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  logoUrl     String?
+  color       String   @default("#111111")
+  hashtags    String[]
+  tone        String   @default("friendly")
+  imageEngine String   @default("custom")
+  canvaApiKey String?
+  templateId  String?
+}
 model Content {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
   topic       String
-  title       String
-  body        String
-  hashtags    String    @default("") // comma-separated
-  platform    String    @default("instagram") // instagram | threads | blog | x
-  tone        String    @default("friendly")
-  imageUrl    String?
-  status      String    @default("draft") // draft | scheduled | published | failed
+  sourceType  SourceType @default(MANUAL)
+  sourceUrl   String?
+  status      Status     @default(DRAFT)
   scheduledAt DateTime?
   publishedAt DateTime?
-  externalUrl String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  posts       Post[]
 }
-
-/// A generated / processed image asset (Storage page).
-model Asset {
-  id        String   @id @default(cuid())
-  prompt    String
-  url       String
-  width     Int      @default(1080)
-  height    Int      @default(1080)
-  createdAt DateTime @default(now())
+enum SourceType { MANUAL URL FILE DIVERSIFIED }
+enum Status { DRAFT SCHEDULED PUBLISHING PUBLISHED FAILED }
+model Post {
+  id          String   @id @default(cuid())
+  contentId   String
+  content     Content  @relation(fields: [contentId], references: [id])
+  channel     Channel
+  title       String?
+  body        String
+  imageUrl    String?
+  hashtags    String[]
+  status      Status   @default(DRAFT)
+  errorMsg    String?
+  retryCount  Int      @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
 }
-
-/// A connected SNS channel (Settings page).
-model Account {
+enum Channel {
+  BLOG_NAVER NEWS_HOMEPAGE INSTAGRAM THREADS
+  KAKAO_CHANNEL DAANGN BAND FACEBOOK
+  PAYPLAY_BLOG PAYPLAY_PRESS
+}
+model DiagnosticLog {
   id        String   @id @default(cuid())
-  platform  String
-  handle    String
-  active    Boolean  @default(true)
+  error     String
+  stack     String?
+  analysis  String?
+  fixCode   String?
+  resolved  Boolean  @default(false)
   createdAt DateTime @default(now())
 }

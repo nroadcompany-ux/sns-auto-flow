@@ -1,61 +1,23 @@
-@import "tailwindcss";
-
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --background: #f7f7fb;
-  --foreground: #1a1a2e;
-  --card: #ffffff;
-  --border: #e6e6ef;
-  --muted: #6b7280;
-  --brand: #6d28d9;
-  --brand-2: #ec4899;
+  --black: #111111;
+  --white: #ffffff;
+  --gray-50: #f7f8fc;
+  --gray-100: #f0f2f5;
+  --gray-200: #e5e7eb;
+  --gray-400: #9ca3af;
+  --gray-600: #6b7280;
+  --blue: #1a73e8;
+  --blue-light: #eff6ff;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-brand: var(--brand);
-  --color-brand-2: var(--brand-2);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0e0e16;
-    --foreground: #ededf2;
-    --card: #181826;
-    --border: #2a2a3c;
-    --muted: #9ca3af;
-    --brand: #8b5cf6;
-    --brand-2: #f472b6;
-  }
-}
-
-@layer base {
-  *,
-  ::before,
-  ::after {
-    border-color: var(--border);
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, "Apple SD Gothic Neo", "Malgun Gothic",
-    sans-serif;
-}
-
-.brand-gradient {
-  background-image: linear-gradient(135deg, var(--brand), var(--brand-2));
-}
-
-.brand-text {
-  background-image: linear-gradient(135deg, var(--brand), var(--brand-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+html, body { height: 100%; font-family: "Pretendard", -apple-system, sans-serif; background: var(--gray-50); color: var(--black); }
+input, textarea, select, button { font-family: inherit; }
+input:focus, textarea:focus, select:focus { outline: none; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.spin { animation: spin 0.8s linear infinite; }
+.fade-up { animation: fadeUp 0.25s ease forwards; }
+.pulse { animation: pulse 1.2s ease-in-out infinite; }
