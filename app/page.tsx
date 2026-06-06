@@ -35,7 +35,7 @@ const STATUS_STYLE = {
   failed:    { label: "실패",     color: "#dc2626", bg: "#fee2e2" },
 }
 
-type TNav = "create" | "schedule" | "storage" | "settings" | "admin"
+type TNav = "home" | "create" | "schedule" | "storage" | "settings" | "admin"
 
 // ── 유틸 ─────────────────────────────────────
 function genDates(count: number, start: string, freq: string): Date[] {
@@ -97,7 +97,7 @@ function BigBtn({ children, onClick, disabled, style }: { children: React.ReactN
 
 // ── 메인 ─────────────────────────────────────
 export default function SFA() {
-  const [nav, setNav] = useState<TNav>("create")
+  const [nav, setNav] = useState<TNav>("home")
 
   // 생성 폼
   const [sourceType, setSourceType] = useState<TSourceType>("MANUAL")
@@ -160,7 +160,7 @@ export default function SFA() {
 
   // 발행 일정 / 소재 보관함 탭 진입 시 히스토리 로드
   useEffect(() => {
-    if (nav === "schedule" || nav === "storage") loadHistory()
+    if (nav === "schedule" || nav === "storage" || nav === "home") loadHistory()
   }, [nav, loadHistory])
 
   const dates = genDates(count, startDate, freq)
@@ -271,11 +271,12 @@ export default function SFA() {
 
         <nav style={{ flex: 1, padding: "0 10px", display: "flex", flexDirection: "column", gap: 2 }}>
           {([
-            { id: "create",   label: "콘텐츠 생성" },
-            { id: "schedule", label: "발행 일정" },
-            { id: "storage",  label: "소재 보관함" },
-            { id: "settings", label: "설정" },
-            { id: "admin",    label: "관리자 진단" },
+            { id: "home",     label: "🏠 홈" },
+            { id: "create",   label: "✨ 생성" },
+            { id: "schedule", label: "📅 일정" },
+            { id: "storage",  label: "📦 보관함" },
+            { id: "settings", label: "⚙️ 설정" },
+            { id: "admin",    label: "🔐 진단" },
           ] as { id: TNav; label: string }[]).map(item => (
             <button key={item.id}
               style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 8, border: "none", background: nav === item.id ? "#f7f8fc" : "transparent", fontSize: 13, color: nav === item.id ? "#111" : "#6b7280", cursor: "pointer", textAlign: "left", fontWeight: nav === item.id ? 700 : 500 }}
@@ -300,6 +301,103 @@ export default function SFA() {
       {/* 메인 */}
       <main className="sfa-main">
         <div className="sfa-content">
+
+          {/* ══ 홈 대시보드 ══ */}
+          {nav === "home" && (
+            <div style={{ maxWidth: 860 }}>
+              {/* 헤더 */}
+              <div style={{ marginBottom: 32 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: "#111", color: "#fff", fontSize: 15, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>SF</div>
+                  <div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: "#111", letterSpacing: -0.5 }}>SNS FLOW AUTO</div>
+                    <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>AI 기반 SNS 콘텐츠 자동화 플랫폼</div>
+                  </div>
+                </div>
+                <div style={{ padding: "16px 20px", background: "linear-gradient(135deg,#f0f7ff,#f5f0ff)", borderRadius: 14, fontSize: 14, color: "#374151", lineHeight: 1.8 }}>
+                  주제 하나만 입력하면 <strong>블로그 · 뉴스 · 인스타그램 · 스레드 · 카카오</strong> 5개 채널용 콘텐츠를 Claude AI가 동시에 작성해줘요.<br />
+                  채널별로 내용을 복사하거나, 연동된 채널에는 자동 발행까지 한번에 처리할 수 있어요.
+                </div>
+              </div>
+
+              {/* 통계 */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 32 }}>
+                {[
+                  { label: "총 생성", value: dbItems.length, color: "#1a73e8", icon: "📝" },
+                  { label: "게시 완료", value: dbItems.filter(i => i.status === "published").length, color: "#059669", icon: "✅" },
+                  { label: "임시저장", value: dbItems.filter(i => i.status === "draft").length, color: "#d97706", icon: "🗂️" },
+                ].map(s => (
+                  <Card key={s.label} style={{ textAlign: "center", padding: "20px 12px" }}>
+                    <div style={{ fontSize: 24, marginBottom: 6 }}>{s.icon}</div>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>{s.label}</div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* 사용 방법 */}
+              <Card style={{ marginBottom: 20 }}>
+                <Label>📖 사용 방법 (3단계)</Label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                  {[
+                    { step: 1, title: "주제 입력", icon: "✏️", desc: "상단 '✨ 생성' 탭 → 주제·키워드·톤 설정 후\n✦ 자동화 시작 클릭", action: "create" as TNav },
+                    { step: 2, title: "내용 확인·복사", icon: "📋", desc: "생성 완료 후 '📅 일정' 탭에서\n채널별 탭을 클릭하고 '복사하기' 버튼 사용", action: "schedule" as TNav },
+                    { step: 3, title: "SNS에 붙여넣기", icon: "🚀", desc: "복사한 내용을 각 SNS에 직접 게시\n(채널 연동 시 자동 발행 가능)", action: "storage" as TNav },
+                  ].map(s => (
+                    <button key={s.step} onClick={() => setNav(s.action)}
+                      style={{ textAlign: "left", padding: "16px", background: "#f7f8fc", border: "1.5px solid #e5e7eb", borderRadius: 12, cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#111", color: "#fff", fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.step}</div>
+                        <span style={{ fontSize: 16 }}>{s.icon}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>{s.title}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.7, whiteSpace: "pre-line" }}>{s.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </Card>
+
+              {/* 채널 연동 현황 */}
+              <Card style={{ marginBottom: 20 }}>
+                <Label>📡 채널 연동 현황</Label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {[
+                    { ch: "AI 생성 (Claude)", ok: true, desc: "블로그·뉴스·인스타·스레드·카카오 동시 생성" },
+                    { ch: "이미지 생성", ok: true, desc: "SVG 브랜드 카드 자동 생성" },
+                    { ch: "내용 복사", ok: true, desc: "채널별 글·해시태그 원클릭 복사" },
+                    { ch: "페이플레이 블로그", ok: false, desc: "홈페이지 API 연동 시 자동 게시 가능" },
+                    { ch: "카카오 채널", ok: false, desc: "비즈니스 채널 API 심사 후 자동 발행" },
+                    { ch: "Instagram / Threads", ok: false, desc: "Meta 앱 심사 후 자동 발행 (수일~수주)" },
+                  ].map(item => (
+                    <div key={item.ch} style={{ display: "flex", gap: 10, padding: "10px 12px", background: item.ok ? "#f0fdf4" : "#f7f8fc", borderRadius: 10, borderLeft: `3px solid ${item.ok ? "#10b981" : "#e5e7eb"}` }}>
+                      <span style={{ fontSize: 16 }}>{item.ok ? "✅" : "⬜"}</span>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111", marginBottom: 2 }}>{item.ch}</div>
+                        <div style={{ fontSize: 11, color: "#6b7280" }}>{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* 주의사항 */}
+              <Card style={{ background: "#fffbeb", borderColor: "#fde68a" }}>
+                <Label>⚠️ 현재 알려진 제한사항</Label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: "#78350f" }}>
+                  <div>• <strong>생성 횟수 비용:</strong> Claude API 사용량만큼 과금됩니다. 생성 1회 ≈ $0.01~0.03</div>
+                  <div>• <strong>히스토리 저장:</strong> 로컬에서는 저장되지만 배포 서버(Vercel)에서는 DB 설정 전까지 저장 안 됩니다</div>
+                  <div>• <strong>자동 발행:</strong> 현재 대부분 채널은 '소재 보관함 저장' 모드입니다. 직접 복사해서 게시하세요</div>
+                  <div>• <strong>관리자 진단:</strong> SFA_ADMIN_KEY = <code style={{ background: "#fef3c7", padding: "1px 4px", borderRadius: 4 }}>sfa-admin-nroad-2024</code></div>
+                </div>
+              </Card>
+
+              {/* 바로가기 버튼 */}
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <BigBtn onClick={() => setNav("create")} style={{ flex: 2 }}>✨ 지금 바로 콘텐츠 만들기</BigBtn>
+                <BigBtn onClick={() => setNav("admin")} style={{ flex: 1, background: "#f7f8fc", color: "#111", border: "1.5px solid #e5e7eb" }}>🔐 시스템 진단</BigBtn>
+              </div>
+            </div>
+          )}
 
           {/* ══ 생성 ══ */}
           {nav === "create" && !generating && (
