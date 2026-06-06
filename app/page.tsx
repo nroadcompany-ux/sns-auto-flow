@@ -166,8 +166,9 @@ export default function SFA() {
       setSchedule(results)
       if (results[0]) { setActiveItem(results[0]); setActiveChannel(channels[0]) }
       setTimeout(() => { setGenerating(false); setNav("schedule") }, 500)
-    } catch {
-      setGenLogs(p => p.map(l => ({ ...l, error: true, step: "오류 발생" })))
+    } catch (e) {
+      const msg = e instanceof Error && e.message ? e.message.slice(0, 60) : "오류 발생"
+      setGenLogs(p => p.map(l => ({ ...l, error: true, step: msg })))
       setGenerating(false)
     }
   }
