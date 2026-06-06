@@ -1,74 +1,51 @@
+// SNS AUTO FLOW — Prisma Schema
+// Local: SQLite (zero setup). 배포 시 provider="postgresql" + DATABASE_URL 변경.
+
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  contents  Content[]
-  brand     Brand?
-}
-enum Role { USER ADMIN SUPER_ADMIN }
-model Brand {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  logoUrl     String?
-  color       String   @default("#111111")
-  hashtags    String[]
-  tone        String   @default("friendly")
-  imageEngine String   @default("custom")
-  canvaApiKey String?
-  templateId  String?
-}
+
+/// 생성된 콘텐츠 묶음 (1회 자동화 실행 = 1 Content)
 model Content {
-  id          String     @id @default(cuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
   topic       String
-  sourceType  SourceType @default(MANUAL)
-  sourceUrl   String?
-  status      Status     @default(DRAFT)
+  angle       String   @default("일반")
+  sourceType  String   @default("MANUAL")
+  tone        String   @default("friendly")
+  channels    String   // JSON 배열 ["INSTAGRAM","THREADS",...]
+  contentJson String   // IGeneratedContent 전체 JSON
+  status      String   @default("draft") // draft | scheduled | published | failed
   scheduledAt DateTime?
   publishedAt DateTime?
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime @default(now())
   posts       Post[]
 }
-enum SourceType { MANUAL URL FILE DIVERSIFIED }
-enum Status { DRAFT SCHEDULED PUBLISHING PUBLISHED FAILED }
+
+/// 채널별 발행 결과
 model Post {
   id          String   @id @default(cuid())
   contentId   String
-  content     Content  @relation(fields: [contentId], references: [id])
-  channel     Channel
+  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  channel     String
   title       String?
   body        String
-  imageUrl    String?
-  hashtags    String[]
-  status      Status   @default(DRAFT)
+  hashtags    String   @default("")
+  status      String   @default("draft") // draft | published | failed | fallback
   errorMsg    String?
-  retryCount  Int      @default(0)
   publishedAt DateTime?
   createdAt   DateTime @default(now())
 }
-enum Channel {
-  BLOG_NAVER NEWS_HOMEPAGE INSTAGRAM THREADS
-  KAKAO_CHANNEL DAANGN BAND FACEBOOK
-  PAYPLAY_BLOG PAYPLAY_PRESS
-}
+
+/// 관리자 진단 로그
 model DiagnosticLog {
   id        String   @id @default(cuid())
   error     String
-  stack     String?
   analysis  String?
-  fixCode   String?
   resolved  Boolean  @default(false)
   createdAt DateTime @default(now())
 }

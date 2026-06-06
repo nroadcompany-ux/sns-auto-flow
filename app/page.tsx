@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { CHANNEL_META, TChannel, TTone, TSourceType, TImageEngine, IScheduleItem } from "@/types"
 
 // ── 상수 ─────────────────────────────────────
@@ -131,6 +131,38 @@ export default function SFA() {
   const [diagResult, setDiagResult] = useState<any>(null)
   const [diagLoading, setDiagLoading] = useState(false)
 
+  // DB 히스토리
+  const [dbItems, setDbItems] = useState<IScheduleItem[]>([])
+  const [dbLoading, setDbLoading] = useState(false)
+
+  const loadHistory = useCallback(async () => {
+    setDbLoading(true)
+    try {
+      const res = await fetch("/api/history?limit=50")
+      const data = await res.json()
+      if (data.success) {
+        const mapped: IScheduleItem[] = data.items.map((item: any, i: number) => ({
+          id: item.id,
+          index: i + 1,
+          topic: item.topic,
+          angle: item.angle || "일반",
+          date: new Date(item.createdAt),
+          status: item.status as any,
+          content: item.content,
+          channels: item.channels || [],
+          dbId: item.id,
+        }))
+        setDbItems(mapped)
+      }
+    } catch {}
+    finally { setDbLoading(false) }
+  }, [])
+
+  // 발행 일정 / 소재 보관함 탭 진입 시 히스토리 로드
+  useEffect(() => {
+    if (nav === "schedule" || nav === "storage") loadHistory()
+  }, [nav, loadHistory])
+
   const dates = genDates(count, startDate, freq)
   const toggleCh = (ch: TChannel) =>
     setChannels(p => p.includes(ch) ? p.filter(c => c !== ch) : [...p, ch])
@@ -145,7 +177,7 @@ export default function SFA() {
       const res = await fetch("/api/content/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency: freq }),
+        body: JSON.stringify({ topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency: freq, channels }),
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
@@ -153,14 +185,15 @@ export default function SFA() {
       const results: IScheduleItem[] = data.results.map((r: any, i: number) => {
         setGenLogs(p => p.map((l, idx) => idx === i ? { ...l, step: "완료", done: true } : l))
         return {
-          id: `${Date.now()}-${i}`,
+          id: r.dbId || `${Date.now()}-${i}`,
           index: r.index || i + 1,
           topic: r.topic || topic,
           angle: r.angle || "일반",
           date: dates[i],
-          status: i === 0 ? "published" : "scheduled",
+          status: "draft" as const,
           content: r.content,
           channels,
+          dbId: r.dbId,
         }
       })
       setSchedule(results)
@@ -187,7 +220,7 @@ export default function SFA() {
       const res = await fetch("/api/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channels: item.channels, payload }),
+        body: JSON.stringify({ channels: item.channels, payload, dbId: (item as any).dbId }),
       })
       const data = await res.json()
       setPublishResults(data.summary || [])
@@ -254,12 +287,12 @@ export default function SFA() {
 
         <div style={{ padding: "16px 20px 0", borderTop: "1px solid #f0f0f0", display: "flex", gap: 16 }}>
           <div style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#111" }}>{schedule.length}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#111" }}>{dbItems.length || schedule.length}</div>
             <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>총 콘텐츠</div>
           </div>
           <div style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: "#111" }}>{schedule.filter(s => s.status === "scheduled").length}</div>
-            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>예약 대기</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#059669" }}>{dbItems.filter(s => s.status === "published").length || schedule.filter(s => s.status === "published").length}</div>
+            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>게시 완료</div>
           </div>
         </div>
       </aside>
@@ -447,14 +480,21 @@ export default function SFA() {
           )}
 
           {/* ══ 일정 ══ */}
-          {nav === "schedule" && (
+          {nav === "schedule" && (() => {
+            const displayItems = dbItems.length > 0 ? dbItems : schedule
+            return (
             <>
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: -0.5 }}>발행 일정</div>
-                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>채널별 콘텐츠 검토 · 편집 · 복사 · 자동 발행</div>
+              <div style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: -0.5 }}>발행 일정</div>
+                  <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>채널별 콘텐츠 검토 · 편집 · 복사 · 자동 발행</div>
+                </div>
+                <button onClick={loadHistory} style={{ padding: "8px 14px", background: "#f7f8fc", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  {dbLoading ? "⏳ 로딩..." : "🔄 새로고침"}
+                </button>
               </div>
 
-              {schedule.length === 0 ? (
+              {displayItems.length === 0 ? (
                 <Card style={{ textAlign: "center", padding: 60 }}>
                   <div style={{ fontSize: 32, marginBottom: 12 }}>◈</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#9ca3af", marginBottom: 16 }}>생성된 일정이 없어요</div>
@@ -462,48 +502,45 @@ export default function SFA() {
                 </Card>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20 }}>
-                  {/* 목록 */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {schedule.map(item => (
+                    {displayItems.map(item => {
+                      const st = STATUS_STYLE[item.status as keyof typeof STATUS_STYLE] || STATUS_STYLE.draft
+                      return (
                       <button key={item.id}
                         style={{ background: "#fff", border: `1.5px solid ${activeItem?.id === item.id ? "#111" : "#f0f0f0"}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer", textAlign: "left" }}
-                        onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0]); setPublishResults([]) }}>
+                        onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0] || "INSTAGRAM"); setPublishResults([]) }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af" }}>{item.index}편</span>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, color: STATUS_STYLE[item.status].color, background: STATUS_STYLE[item.status].bg }}>{STATUS_STYLE[item.status].label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, color: st.color, background: st.bg }}>{st.label}</span>
                         </div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#111", lineHeight: 1.4, marginBottom: 6 }}>{item.topic}</div>
                         <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8 }}>📅 {fmtDate(item.date)} · {item.angle}</div>
                         <div style={{ display: "flex", gap: 4 }}>
-                          {item.channels.map(ch => <div key={ch} style={{ width: 7, height: 7, borderRadius: "50%", background: CHANNEL_META[ch].color }} />)}
+                          {item.channels.map(ch => <div key={ch} style={{ width: 7, height: 7, borderRadius: "50%", background: CHANNEL_META[ch as TChannel]?.color || "#ccc" }} />)}
                         </div>
                       </button>
-                    ))}
+                    )})}
                   </div>
 
-                  {/* 상세 */}
                   {activeItem && (
                     <Card style={{ padding: 0, overflow: "hidden" }}>
                       <div style={{ padding: "20px 24px", borderBottom: "1px solid #f0f0f0" }}>
                         <div style={{ fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 4 }}>{activeItem.topic}</div>
                         <div style={{ fontSize: 13, color: "#9ca3af" }}>📅 {fmtDate(activeItem.date)} · {activeItem.angle}</div>
                       </div>
-
-                      {/* 채널 탭 */}
                       <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 24px", overflowX: "auto" }}>
                         {activeItem.channels.map(ch => {
-                          const m = CHANNEL_META[ch]
+                          const m = CHANNEL_META[ch as TChannel]
+                          if (!m) return null
                           return (
                             <button key={ch}
                               style={{ padding: "12px 14px", border: "none", borderBottom: `2px solid ${activeChannel === ch ? m.color : "transparent"}`, background: "transparent", fontSize: 12, fontWeight: activeChannel === ch ? 700 : 500, color: activeChannel === ch ? m.color : "#9ca3af", cursor: "pointer", whiteSpace: "nowrap" }}
-                              onClick={() => setActiveChannel(ch)}>
+                              onClick={() => setActiveChannel(ch as TChannel)}>
                               {m.label}
                             </button>
                           )
                         })}
                       </div>
-
-                      {/* 콘텐츠 */}
                       <div style={{ padding: 24 }}>
                         {activeItem.content ? (
                           <>
@@ -518,13 +555,11 @@ export default function SFA() {
                               </div>
                             )}
                             <div style={{ display: "flex", gap: 10, paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
-                              <button
-                                style={{ padding: "9px 16px", background: "#f7f8fc", color: "#111", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                              <button style={{ padding: "9px 16px", background: "#f7f8fc", color: "#111", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                                 onClick={() => copy(activeItem.id + activeChannel, getChannelText(activeItem, activeChannel))}>
                                 {copied === activeItem.id + activeChannel ? "✅ 복사됨" : "📋 복사하기"}
                               </button>
-                              <button
-                                style={{ padding: "9px 20px", background: "#111", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                              <button style={{ padding: "9px 20px", background: "#111", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                                 onClick={() => handlePublish(activeItem)} disabled={publishing}>
                                 {publishing ? "발행 중..." : "🚀 자동 발행"}
                               </button>
@@ -550,37 +585,46 @@ export default function SFA() {
                 </div>
               )}
             </>
-          )}
+            )
+          })()}
 
           {/* ══ 소재 보관함 ══ */}
           {nav === "storage" && (
             <>
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: -0.5 }}>소재 보관함</div>
-                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>자동 발행 실패 · 수동 발행 대기 소재 · 원클릭 복사</div>
+              <div style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#111", letterSpacing: -0.5 }}>소재 보관함</div>
+                  <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>생성된 전체 소재 · 원클릭 복사 · 발행 일정으로 이동</div>
+                </div>
+                <button onClick={loadHistory} style={{ padding: "8px 14px", background: "#f7f8fc", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  {dbLoading ? "⏳" : "🔄 새로고침"}
+                </button>
               </div>
-              {schedule.length === 0 ? (
+              {(() => {
+                const storageItems = dbItems.length > 0 ? dbItems : schedule
+                return storageItems.length === 0 ? (
                 <Card style={{ textAlign: "center", padding: 60 }}>
                   <div style={{ fontSize: 32, marginBottom: 12 }}>○</div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "#9ca3af" }}>저장된 소재가 없어요</div>
                 </Card>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
-                  {schedule.map(item => (
+                  {storageItems.map(item => (
                     <Card key={item.id} style={{ cursor: "pointer", padding: 18 }}
-                      onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0]); setNav("schedule") }}>
+                      onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0] || "INSTAGRAM"); setNav("schedule") }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, color: STATUS_STYLE[item.status].color, background: STATUS_STYLE[item.status].bg }}>{STATUS_STYLE[item.status].label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, color: STATUS_STYLE[item.status as keyof typeof STATUS_STYLE]?.color || "#6b7280", background: STATUS_STYLE[item.status as keyof typeof STATUS_STYLE]?.bg || "#f3f4f6" }}>{STATUS_STYLE[item.status as keyof typeof STATUS_STYLE]?.label || item.status}</span>
                         <span style={{ fontSize: 11, color: "#9ca3af" }}>{fmtDate(item.date)}</span>
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111", lineHeight: 1.4, marginBottom: 12 }}>{item.topic}</div>
                       <div style={{ display: "flex", gap: 4 }}>
-                        {item.channels.map(ch => <div key={ch} style={{ width: 7, height: 7, borderRadius: "50%", background: CHANNEL_META[ch].color }} />)}
+                        {item.channels.map(ch => <div key={ch} style={{ width: 7, height: 7, borderRadius: "50%", background: CHANNEL_META[ch as TChannel]?.color || "#ccc" }} />)}
                       </div>
                     </Card>
                   ))}
                 </div>
-              )}
+              )
+              })()}
             </>
           )}
 

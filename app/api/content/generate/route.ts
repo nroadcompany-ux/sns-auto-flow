@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { generateContent, diversifyTopics, extractFromSource } from "@/lib/ai/generate"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(req: NextRequest) {
   try {
-    const { topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency } = await req.json()
+    const { topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency, channels } = await req.json()
     let plans: any[] = []
 
     if (sourceType === "DIVERSIFIED") {
@@ -25,8 +26,29 @@ export async function POST(req: NextRequest) {
         total: count,
         angle: plan.angle,
       })
-      results.push({ ...plan, content })
+
+      // DB 저장 (실패해도 생성 결과는 반환)
+      let dbId: string | undefined
+      try {
+        const saved = await prisma.content.create({
+          data: {
+            topic: plan.topic || topic,
+            angle: plan.angle || "일반",
+            sourceType: sourceType || "MANUAL",
+            tone: tone || "friendly",
+            channels: JSON.stringify(channels || []),
+            contentJson: JSON.stringify(content),
+            status: "draft",
+          },
+        })
+        dbId = saved.id
+      } catch (dbErr) {
+        console.error("[generate] DB save failed:", dbErr)
+      }
+
+      results.push({ ...plan, content, dbId })
     }
+
     return NextResponse.json({ success: true, results })
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 })
