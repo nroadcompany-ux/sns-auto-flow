@@ -257,11 +257,11 @@ export default function SFA() {
   // RENDER
   // ─────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="sfa-shell">
 
       {/* 사이드바 */}
-      <aside style={{ width: 220, background: "#fff", borderRight: "1px solid #f0f0f0", display: "flex", flexDirection: "column", padding: "24px 0", flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 24px", borderBottom: "1px solid #f0f0f0", marginBottom: 16 }}>
+      <aside className="sfa-sidebar">
+        <div className="sfa-sidebar-logo" style={{ alignItems: "center", gap: 10, padding: "0 20px 24px", borderBottom: "1px solid #f0f0f0", marginBottom: 16 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: "#111", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", letterSpacing: -0.5, flexShrink: 0 }}>SF</div>
           <div>
             <div style={{ fontWeight: 900, fontSize: 13, color: "#111", letterSpacing: -0.3 }}>SNS FLOW</div>
@@ -285,7 +285,7 @@ export default function SFA() {
           ))}
         </nav>
 
-        <div style={{ padding: "16px 20px 0", borderTop: "1px solid #f0f0f0", display: "flex", gap: 16 }}>
+        <div className="sfa-sidebar-stats" style={{ padding: "16px 20px 0", borderTop: "1px solid #f0f0f0", gap: 16 }}>
           <div style={{ flex: 1, textAlign: "center" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#111" }}>{dbItems.length || schedule.length}</div>
             <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>총 콘텐츠</div>
@@ -298,8 +298,8 @@ export default function SFA() {
       </aside>
 
       {/* 메인 */}
-      <main style={{ flex: 1, overflow: "auto" }}>
-        <div style={{ padding: "32px 28px", maxWidth: 1100 }}>
+      <main className="sfa-main">
+        <div className="sfa-content">
 
           {/* ══ 생성 ══ */}
           {nav === "create" && !generating && (
@@ -309,7 +309,7 @@ export default function SFA() {
                 <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>최소 정보 입력 → 블로그부터 SNS까지 자동 생성·발행</div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20, alignItems: "start" }}>
+              <div className="sfa-create-grid">
                 {/* 왼쪽 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -706,6 +706,80 @@ export default function SFA() {
 
         </div>
       </main>
+
+      {/* ── 우측 패널 (데스크톱 전용) ── */}
+      <aside className="sfa-right-panel">
+
+        {/* 최근 생성 목록 */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 12 }}>최근 생성</div>
+          {dbItems.length === 0 ? (
+            <div style={{ fontSize: 12, color: "#9ca3af", lineHeight: 1.6, padding: "8px 0" }}>
+              아직 생성된 콘텐츠가 없어요.<br/>
+              주제를 입력해 시작해보세요!
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {dbItems.slice(0, 5).map((item, i) => {
+                const st = STATUS_STYLE[item.status as keyof typeof STATUS_STYLE] || STATUS_STYLE.draft
+                return (
+                  <button key={item.id}
+                    style={{ padding: "10px 12px", background: "#f7f8fc", borderRadius: 10, border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0] || "INSTAGRAM"); setNav("schedule") }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 10, color: st.color, background: st.bg }}>{st.label}</span>
+                      <span style={{ fontSize: 10, color: "#9ca3af" }}>{fmtDate(item.date)}</span>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111", lineHeight: 1.4, marginBottom: 4 }}>{item.topic}</div>
+                    <div style={{ display: "flex", gap: 3 }}>
+                      {item.channels.slice(0, 5).map(ch => (
+                        <div key={ch} style={{ width: 6, height: 6, borderRadius: "50%", background: CHANNEL_META[ch as TChannel]?.color || "#ccc" }} />
+                      ))}
+                      {item.channels.length > 5 && <span style={{ fontSize: 9, color: "#9ca3af" }}>+{item.channels.length - 5}</span>}
+                    </div>
+                  </button>
+                )
+              })}
+              <button style={{ fontSize: 11, color: "#1a73e8", background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
+                onClick={() => { loadHistory(); setNav("storage") }}>
+                전체 보기 →
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 공지사항 & 사용 팁 */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 12 }}>채널 현황 & 팁</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              { icon: "🤖", title: "AI 자동 생성", desc: "주제만 입력하면 블로그·뉴스·인스타·스레드·카카오 5채널 동시 생성", ok: true },
+              { icon: "🖼️", title: "이미지 생성", desc: "SVG 브랜드 카드 즉시 생성 가능 (/api/image)", ok: true },
+              { icon: "📋", title: "복사 발행", desc: "채널탭에서 내용 복사 후 직접 게시 — 지금 바로 사용 가능", ok: true },
+              { icon: "🟣", title: "페이플레이 발행", desc: "홈페이지 /api/posts/create 연결 시 자동 발행 활성화", ok: false },
+              { icon: "🟡", title: "카카오 채널", desc: "카카오 비즈니스 채널 + API 심사 후 실발행 가능 (3~7일)", ok: false },
+              { icon: "🔴", title: "Instagram / Threads", desc: "Meta 앱 심사 필요 — 현재 소재 보관함 저장 모드", ok: false },
+            ].map(tip => (
+              <div key={tip.title} style={{ padding: "10px 12px", background: tip.ok ? "#f0fdf4" : "#f7f8fc", borderRadius: 10, borderLeft: `3px solid ${tip.ok ? "#10b981" : "#e5e7eb"}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#111", marginBottom: 3 }}>
+                  {tip.icon} {tip.title}
+                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: tip.ok ? "#059669" : "#9ca3af" }}>{tip.ok ? "사용 가능" : "미연동"}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "#6b7280", lineHeight: 1.5 }}>{tip.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 관리자 진단 바로가기 */}
+        <div style={{ marginTop: "auto", paddingTop: 16, borderTop: "1px solid #f0f0f0" }}>
+          <button style={{ width: "100%", padding: "10px", background: "#f7f8fc", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#374151" }}
+            onClick={() => setNav("admin")}>
+            🔐 관리자 진단
+          </button>
+        </div>
+
+      </aside>
     </div>
   )
 }
