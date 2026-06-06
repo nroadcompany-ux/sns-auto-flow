@@ -1,44 +1,46 @@
 // SNS AUTO FLOW — Prisma Schema
-// Local: SQLite (zero setup). 배포 시 provider="postgresql" + DATABASE_URL 변경.
+// 로컬: DATABASE_URL="file:./prisma/dev.db" (SQLite)
+// 프로덕션: DATABASE_URL=postgresql://... (Supabase / Vercel Postgres)
+// provider는 DATABASE_URL prefix로 자동 구분
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 /// 생성된 콘텐츠 묶음 (1회 자동화 실행 = 1 Content)
 model Content {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   topic       String
-  angle       String   @default("일반")
-  sourceType  String   @default("MANUAL")
-  tone        String   @default("friendly")
-  channels    String   // JSON 배열 ["INSTAGRAM","THREADS",...]
-  contentJson String   // IGeneratedContent 전체 JSON
-  status      String   @default("draft") // draft | scheduled | published | failed
+  angle       String    @default("일반")
+  sourceType  String    @default("MANUAL")
+  tone        String    @default("friendly")
+  channels    String    // JSON 배열 ["INSTAGRAM","THREADS",...]
+  contentJson String    // IGeneratedContent 전체 JSON
+  status      String    @default("draft")
   scheduledAt DateTime?
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   posts       Post[]
 }
 
 /// 채널별 발행 결과
 model Post {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   contentId   String
-  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content     Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
   channel     String
   title       String?
   body        String
-  hashtags    String   @default("")
-  status      String   @default("draft") // draft | published | failed | fallback
+  hashtags    String    @default("")
+  status      String    @default("draft")
   errorMsg    String?
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 /// 관리자 진단 로그
