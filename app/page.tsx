@@ -24,6 +24,104 @@ const BLOG_CHANNELS: TChannel[] = ["BLOG_NAVER","NEWS_HOMEPAGE","PAYPLAY_BLOG","
 // 실제 연동 상태 (env 기반)
 const CHANNEL_CONNECTED = new Set<TChannel>(["PAYPLAY_BLOG","PAYPLAY_PRESS"])
 
+// 채널별 연동 가이드
+const CHANNEL_GUIDE: Partial<Record<TChannel, { title: string; steps: string[]; link?: string; linkLabel?: string }>> = {
+  INSTAGRAM: {
+    title: "인스타그램 연동 방법",
+    steps: [
+      "1. Meta for Developers(developers.facebook.com) 접속 후 앱 생성",
+      "2. Instagram Basic Display API 또는 Graph API 추가",
+      "3. 앱 심사 제출 — 수일~수주 소요됩니다",
+      "4. 심사 완료 후 Long-lived Access Token 발급",
+      "5. .env에 META_ACCESS_TOKEN=발급받은토큰 입력 후 재배포",
+    ],
+    link: "https://developers.facebook.com",
+    linkLabel: "Meta for Developers 바로가기",
+  },
+  THREADS: {
+    title: "스레드 연동 방법",
+    steps: [
+      "인스타그램 META_ACCESS_TOKEN으로 함께 작동합니다.",
+      "인스타그램 연동을 완료하면 스레드도 자동으로 사용 가능해요.",
+      "별도 토큰 없이 동일한 META_ACCESS_TOKEN을 사용합니다.",
+    ],
+    link: "https://developers.facebook.com",
+    linkLabel: "Meta for Developers 바로가기",
+  },
+  KAKAO_CHANNEL: {
+    title: "카카오 채널 연동 방법",
+    steps: [
+      "1. 카카오디벨로퍼스(developers.kakao.com) 접속 후 앱 등록",
+      "2. 카카오 채널 연결 — 카카오 채널 관리자센터에서 채널 개설 필요",
+      "3. 비즈니스 인증 + API 심사 신청 (보통 3~7일 소요)",
+      "4. 심사 완료 후 .env에 KAKAO_CLIENT_ID=발급ID 입력",
+    ],
+    link: "https://developers.kakao.com",
+    linkLabel: "카카오디벨로퍼스 바로가기",
+  },
+  PAYPLAY_BLOG: {
+    title: "페이플레이 블로그 — 이미 연동됨 ✅",
+    steps: [
+      "PAYPLAY_API_URL과 PAYPLAY_API_SECRET이 설정되어 있어요.",
+      "발행 일정 탭 → '페이플레이 블로그' 탭 → '자동 발행' 버튼을 클릭하세요.",
+      "페이플레이 홈페이지 블로그에 즉시 게시됩니다.",
+    ],
+  },
+  PAYPLAY_PRESS: {
+    title: "페이플레이 언론보도 — 이미 연동됨 ✅",
+    steps: [
+      "페이플레이 블로그와 동일한 API를 사용합니다.",
+      "뉴스/언론보도 형식으로 자동 게시됩니다.",
+      "'자동 발행' 클릭 시 즉시 적용됩니다.",
+    ],
+  },
+  BLOG_NAVER: {
+    title: "네이버 블로그 연동 방법",
+    steps: [
+      "네이버 블로그는 공개 자동발행 API를 제공하지 않습니다.",
+      "현재는 복사 후 직접 게시 방식을 사용하세요:",
+      "1. 발행 일정 탭 → '네이버 블로그' 탭 클릭",
+      "2. '복사하기' 클릭",
+      "3. blog.naver.com → 글쓰기 → 붙여넣기 → 발행",
+    ],
+  },
+  NEWS_HOMEPAGE: {
+    title: "홈페이지 뉴스 연동 방법",
+    steps: [
+      "별도 API 토큰 없이 AI가 뉴스 형식으로 글을 생성합니다.",
+      "복사 후 홈페이지 관리자 페이지에 직접 게시하세요.",
+      "추후 홈페이지 API 연결 시 자동 발행 예정입니다.",
+    ],
+  },
+  DAANGN: {
+    title: "당근 비즈니스 연동 방법",
+    steps: [
+      "당근마켓은 현재 공개 자동발행 API를 제공하지 않습니다.",
+      "당근 비즈니스 앱 또는 웹에서 직접 게시하세요.",
+      "AI가 생성한 내용을 복사해서 활용하세요.",
+    ],
+  },
+  BAND: {
+    title: "밴드 연동 방법",
+    steps: [
+      "네이버 밴드 API는 별도 파트너 계약이 필요합니다.",
+      "현재는 복사 후 직접 게시 방식을 사용하세요:",
+      "1. 발행 일정에서 내용 복사",
+      "2. 밴드 앱 → 새 게시글 → 붙여넣기 → 게시",
+    ],
+  },
+  FACEBOOK: {
+    title: "페이스북 연동 방법",
+    steps: [
+      "1. Meta for Developers에서 페이지 액세스 토큰 발급",
+      "2. Facebook Pages API를 통해 pages_manage_posts 권한 획득",
+      "3. 앱 심사 완료 후 .env에 META_ACCESS_TOKEN=페이지토큰 입력",
+    ],
+    link: "https://developers.facebook.com",
+    linkLabel: "Meta for Developers 바로가기",
+  },
+}
+
 const FREQ_OPTIONS = [
   { id: "daily", label: "매일" }, { id: "weekly", label: "매주" },
   { id: "biweekly", label: "격주" }, { id: "monthly", label: "매월" },
@@ -195,6 +293,12 @@ export default function SFA() {
     setActivityLogs(p => [{ time: fmtTime(new Date()), msg, type }, ...p].slice(0, 30))
   }
 
+  // 채널 연동 가이드 모달
+  const [guideChannel, setGuideChannel] = useState<TChannel | null>(null)
+
+  // 채널 선택 모달 (채널 0개 선택 상태에서 생성 버튼 클릭 시)
+  const [showChannelModal, setShowChannelModal] = useState(false)
+
   // 주제 드롭다운
   const [topicDropOpen, setTopicDropOpen] = useState(false)
   const [topicSearch, setTopicSearch]     = useState("")
@@ -314,12 +418,35 @@ export default function SFA() {
   const dates = genDates(count, startDate, freq)
   const toggleCh = (ch: TChannel) =>
     setChannels(p => p.includes(ch) ? p.filter(c=>c!==ch) : [...p, ch])
-  const selectAllCh  = () => setChannels([...ALL_CHANNELS])
-  const clearAllCh   = () => setChannels([])
+  const selectAllCh = () => setChannels([...ALL_CHANNELS])
+  const clearAllCh  = () => setChannels([])
+
+  // 작업 1: 발행 일정 삭제
+  const handleDeleteSchedule = async (item: IScheduleItem) => {
+    if (!window.confirm("이 일정을 삭제할까요?")) return
+    try {
+      if (item.dbId) {
+        await fetch("/api/history", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: item.dbId }),
+        })
+      }
+      // 로컬 상태에서도 즉시 제거
+      setSchedule(p => p.filter(i => i.id !== item.id))
+      setDbItems(p => p.filter(i => i.id !== item.id))
+      if (activeItem?.id === item.id) setActiveItem(null)
+      addLog(`🗑️ "${item.topic.slice(0, 20)}" 일정 삭제`, "info")
+    } catch {
+      addLog("삭제 실패 — 다시 시도해주세요", "error")
+    }
+  }
 
   const handleGenerate = async () => {
     const input = sourceType === "MANUAL" ? topic : sourceContent
     if (!input.trim()) return
+    // 작업 3: 채널 미선택 시 모달로 안내
+    if (channels.length === 0) { setShowChannelModal(true); return }
     setGenerating(true)
     setGenLogs(Array.from({ length: count }, () => ({ step: "대기 중", done: false, error: false })))
     addLog(`콘텐츠 생성 시작 — ${count}편 × ${channels.length}채널`, "info")
@@ -562,13 +689,19 @@ export default function SFA() {
                         <div className="d2-ch-dot"
                           style={{ background: on ? m.color : "var(--border)" }} />
                         <span className="d2-ch-name">{m.label}</span>
-                        <span className={`d2-conn-badge ${connected?"connected":"disconnected"}`}>
-                          {connected ? "연동" : "미연동"}
-                        </span>
                         <div className={`d2-toggle-sw ${on?"on":""}`}
                           style={{ ["--ch-color" as any]: m.color }}>
                           <div className="d2-toggle-thumb" />
                         </div>
+                      </button>
+                      {/* 연동 가이드 버튼 */}
+                      <button
+                        onClick={e => { e.stopPropagation(); setGuideChannel(ch) }}
+                        style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:"4px 14px 6px", background:"none", border:"none", cursor:"pointer" }}>
+                        <span className={`d2-conn-badge ${connected?"connected":"disconnected"}`} style={{ fontSize:11 }}>
+                          {connected ? "✅ 연동됨" : "⚙️ 미연동"}
+                        </span>
+                        <span style={{ fontSize:11, color:"var(--toss-blue)", fontWeight:600 }}>연동 방법 →</span>
                       </button>
                       {/* 블로그 채널 ON 시 URL 선택 */}
                       {isBlog && on && <BlogExpand ch={ch} />}
@@ -964,19 +1097,30 @@ export default function SFA() {
                       {displayItems.map(item => {
                         const st = STATUS_STYLE[item.status as keyof typeof STATUS_STYLE]||STATUS_STYLE.draft
                         return (
-                          <button key={item.id}
-                            style={{ background:"var(--bg-card)", border:`1.5px solid ${activeItem?.id===item.id?"var(--toss-blue)":"var(--border-light)"}`, borderRadius:"var(--radius-md)", padding:"13px 15px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
-                            onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0]||"INSTAGRAM"); setPublishResults([]) }}>
-                            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
-                              <span style={{ fontSize:12, fontWeight:700, color:"var(--text-tertiary)" }}>{item.index}편</span>
-                              <span className={`badge ${st.cls}`}>{st.label}</span>
-                            </div>
-                            <div style={{ fontSize:14, fontWeight:600, color:"var(--text-primary)", lineHeight:1.4, marginBottom:7 }}>{item.topic}</div>
-                            <div style={{ fontSize:12, color:"var(--text-tertiary)", marginBottom:7 }}>{fmtDate(item.date)} · {item.angle}</div>
-                            <div style={{ display:"flex", gap:4 }}>
-                              {item.channels.map(ch => <div key={ch} className="status-dot" style={{ background:CHANNEL_META[ch as TChannel]?.color||"var(--border)" }} />)}
-                            </div>
-                          </button>
+                          <div key={item.id} style={{ position:"relative" }}>
+                            <button
+                              style={{ width:"100%", background:"var(--bg-card)", border:`1.5px solid ${activeItem?.id===item.id?"var(--toss-blue)":"var(--border-light)"}`, borderRadius:"var(--radius-md)", padding:"13px 15px 13px 15px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+                              onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0]||"INSTAGRAM"); setPublishResults([]) }}>
+                              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                                <span style={{ fontSize:12, fontWeight:700, color:"var(--text-tertiary)" }}>{item.index}편</span>
+                                <span className={`badge ${st.cls}`}>{st.label}</span>
+                              </div>
+                              <div style={{ fontSize:14, fontWeight:600, color:"var(--text-primary)", lineHeight:1.4, marginBottom:7 }}>{item.topic}</div>
+                              <div style={{ fontSize:12, color:"var(--text-tertiary)", marginBottom:7 }}>{fmtDate(item.date)} · {item.angle}</div>
+                              <div style={{ display:"flex", gap:4 }}>
+                                {item.channels.map(ch => <div key={ch} className="status-dot" style={{ background:CHANNEL_META[ch as TChannel]?.color||"var(--border)" }} />)}
+                              </div>
+                            </button>
+                            {/* 삭제 버튼 */}
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDeleteSchedule(item) }}
+                              title="일정 삭제"
+                              style={{ position:"absolute", top:8, right:8, width:22, height:22, borderRadius:6, background:"transparent", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-tertiary)", fontSize:14, fontWeight:700, transition:"all 0.15s", lineHeight:1 }}
+                              onMouseEnter={e => (e.currentTarget.style.background = "#FFE9EB", e.currentTarget.style.color = "var(--danger)")}
+                              onMouseLeave={e => (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "var(--text-tertiary)")}>
+                              ×
+                            </button>
+                          </div>
                         )
                       })}
                     </div>
@@ -1392,6 +1536,135 @@ export default function SFA() {
 
         </div>
       </main>
+
+      {/* ════════════════════════════════════════
+          작업 2: 채널 연동 가이드 모달
+      ════════════════════════════════════════ */}
+      {guideChannel && (
+        <div
+          onClick={() => setGuideChannel(null)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background:"var(--bg-card)", borderRadius:"var(--radius-lg)", width:"100%", maxWidth:480, maxHeight:"85vh", overflow:"auto", boxShadow:"0 8px 40px rgba(0,0,0,0.18)" }}>
+            {/* 모달 헤더 */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 24px 16px", borderBottom:"1px solid var(--border-light)" }}>
+              <div>
+                <div style={{ fontSize:17, fontWeight:800, color:"var(--text-primary)" }}>
+                  {CHANNEL_GUIDE[guideChannel]?.title || `${CHANNEL_META[guideChannel]?.label} 연동`}
+                </div>
+                <div style={{ fontSize:13, color:"var(--text-tertiary)", marginTop:3 }}>
+                  {CHANNEL_CONNECTED.has(guideChannel) ? "현재 연동됨" : "현재 미연동"}
+                </div>
+              </div>
+              <button
+                onClick={() => setGuideChannel(null)}
+                style={{ width:32, height:32, borderRadius:8, border:"none", background:"var(--bg)", cursor:"pointer", fontSize:18, color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                ×
+              </button>
+            </div>
+            {/* 연동 상태 배지 */}
+            <div style={{ padding:"14px 24px 0" }}>
+              <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:20, background: CHANNEL_CONNECTED.has(guideChannel) ? "#E6F9F2" : "#FFF4E0", color: CHANNEL_CONNECTED.has(guideChannel) ? "var(--success)" : "var(--warning)", fontSize:13, fontWeight:700 }}>
+                {CHANNEL_CONNECTED.has(guideChannel) ? "✅ 연동 완료" : "⚠️ 연동 필요"}
+              </span>
+            </div>
+            {/* 가이드 단계 */}
+            <div style={{ padding:"16px 24px 20px" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"var(--text-secondary)", marginBottom:12, textTransform:"uppercase", letterSpacing:0.5 }}>연동 방법</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                {(CHANNEL_GUIDE[guideChannel]?.steps || ["가이드 준비 중입니다."]).map((step, i) => (
+                  <div key={i} style={{ display:"flex", gap:10, padding:"10px 14px", background:"var(--bg)", borderRadius:"var(--radius-sm)", fontSize:14, color:"var(--text-primary)", lineHeight:1.6 }}>
+                    {step}
+                  </div>
+                ))}
+              </div>
+              {/* 외부 링크 */}
+              {CHANNEL_GUIDE[guideChannel]?.link && (
+                <div style={{ marginTop:16, padding:"12px 14px", background:"var(--toss-blue-light)", borderRadius:"var(--radius-md)" }}>
+                  <div style={{ fontSize:13, color:"var(--toss-blue)", fontWeight:600, marginBottom:5 }}>공식 개발자 문서</div>
+                  <div style={{ fontSize:13, color:"var(--text-secondary)" }}>
+                    {CHANNEL_GUIDE[guideChannel]?.linkLabel} — 브라우저에서 직접 접속하세요
+                  </div>
+                  <div style={{ fontSize:12, color:"var(--toss-blue)", marginTop:4, wordBreak:"break-all" }}>
+                    {CHANNEL_GUIDE[guideChannel]?.link}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* 닫기 */}
+            <div style={{ padding:"0 24px 20px" }}>
+              <button onClick={() => setGuideChannel(null)} className="btn btn-secondary btn-full">
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════
+          작업 3: 채널 선택 모달 (채널 0개 → 생성 버튼 클릭)
+      ════════════════════════════════════════ */}
+      {showChannelModal && (
+        <div
+          onClick={() => setShowChannelModal(false)}
+          style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background:"var(--bg-card)", borderRadius:"var(--radius-lg)", width:"100%", maxWidth:440, boxShadow:"0 8px 40px rgba(0,0,0,0.18)" }}>
+            {/* 헤더 */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 24px 14px", borderBottom:"1px solid var(--border-light)" }}>
+              <div>
+                <div style={{ fontSize:17, fontWeight:800, color:"var(--text-primary)" }}>발행 채널 선택</div>
+                <div style={{ fontSize:13, color:"var(--text-tertiary)", marginTop:3 }}>1개 이상 선택해야 콘텐츠가 생성됩니다</div>
+              </div>
+              <button onClick={() => setShowChannelModal(false)}
+                style={{ width:32, height:32, borderRadius:8, border:"none", background:"var(--bg)", cursor:"pointer", fontSize:18, color:"var(--text-secondary)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                ×
+              </button>
+            </div>
+            {/* 채널 목록 */}
+            <div style={{ padding:"14px 20px", maxHeight:"55vh", overflowY:"auto" }}>
+              {CHANNEL_SECTIONS.map(section => (
+                <div key={section.label} style={{ marginBottom:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"var(--text-tertiary)", textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>{section.label}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                    {section.channels.map(ch => {
+                      const m = CHANNEL_META[ch]
+                      const on = channels.includes(ch)
+                      const connected = CHANNEL_CONNECTED.has(ch)
+                      return (
+                        <button key={ch}
+                          onClick={() => toggleCh(ch)}
+                          style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", borderRadius:"var(--radius-sm)", border:`1.5px solid ${on ? m.color : "var(--border)"}`, background: on ? `${m.color}12` : "var(--bg-card)", cursor:"pointer", textAlign:"left", transition:"all 0.15s", opacity: connected ? 1 : 0.7 }}>
+                          <div style={{ width:10, height:10, borderRadius:"50%", background: on ? m.color : "var(--border)", flexShrink:0 }} />
+                          <span style={{ flex:1, fontSize:14, fontWeight: on ? 700 : 500, color: on ? "var(--text-primary)" : "var(--text-secondary)" }}>{m.label}</span>
+                          {!connected && <span style={{ fontSize:11, color:"var(--text-tertiary)", fontWeight:500 }}>미연동</span>}
+                          <div style={{ width:38, height:21, borderRadius:11, background: on ? m.color : "var(--border)", position:"relative", flexShrink:0, transition:"background 0.2s" }}>
+                            <div style={{ width:17, height:17, borderRadius:"50%", background:"white", position:"absolute", top:2, left: on ? 19 : 2, transition:"left 0.2s", boxShadow:"0 1px 4px rgba(0,0,0,0.18)" }} />
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* 선택 수 + 시작 버튼 */}
+            <div style={{ padding:"14px 20px 20px", borderTop:"1px solid var(--border-light)" }}>
+              <div style={{ fontSize:13, color:"var(--text-tertiary)", marginBottom:10, textAlign:"center" }}>
+                {channels.length === 0 ? "채널을 1개 이상 선택해주세요" : `${channels.length}개 채널 선택됨 → ${count * channels.length}개 콘텐츠 생성 예정`}
+              </div>
+              <button
+                className="btn btn-primary btn-full"
+                disabled={channels.length === 0}
+                onClick={() => { setShowChannelModal(false); handleGenerate() }}>
+                {channels.length === 0 ? "채널 선택 후 시작" : `✦ 자동화 시작 — ${channels.length}개 채널`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── 우측 요약 패널 (create 탭) ── */}
       {nav === "create" && !generating && (
