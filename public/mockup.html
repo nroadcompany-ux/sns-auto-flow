@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNS FLOW AUTO — 레이아웃 목업 3종</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:#f0f2f5;color:#191F28;line-height:1.5;}
+:root{
+  --blue:#3182F6;--blue-h:#1B64DA;--blue-l:#E8F2FE;
+  --t1:#191F28;--t2:#4E5968;--t3:#8B95A1;
+  --bg:#F9FAFB;--card:#fff;
+  --bd:#E5E8EB;--bdl:#F2F4F6;
+  --ok:#00C896;--warn:#FF9F2D;--danger:#F04452;
+  --shadow:0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 2px 8px rgba(0,0,0,.08);
+}
+
+/* ── 공통 ── */
+.wrapper{max-width:1400px;margin:0 auto;padding:32px 24px;}
+.page-header{text-align:center;margin-bottom:48px;}
+.page-header h1{font-size:28px;font-weight:800;color:var(--t1);}
+.page-header p{font-size:15px;color:var(--t2);margin-top:8px;}
+.concepts{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:start;}
+.concept-wrap{display:flex;flex-direction:column;gap:12px;}
+.concept-label{display:flex;align-items:center;gap:10px;}
+.concept-label .badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge-a{background:#FFF4E0;color:var(--warn);}
+.badge-b{background:#E6F9F2;color:var(--ok);}
+.badge-c{background:var(--blue-l);color:var(--blue);}
+.badge-rec{background:#F3F0FF;color:#8B5CF6;margin-left:4px;}
+.concept-label h2{font-size:16px;font-weight:800;color:var(--t1);}
+.concept-label p{font-size:12px;color:var(--t2);}
+.mockup{background:var(--card);border-radius:16px;box-shadow:var(--shadow-md);border:1px solid var(--bdl);overflow:hidden;}
+.select-btn{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit;}
+.select-btn:hover{background:var(--blue-h);}
+.select-btn-a{background:var(--warn);}
+.select-btn-a:hover{background:#e8900a;}
+.select-btn-b{background:var(--ok);}
+.select-btn-b:hover{background:#00b589;}
+
+/* ── 공통 컴포넌트 ── */
+.card{background:var(--card);border-radius:12px;border:1px solid var(--bdl);padding:16px 18px;margin-bottom:12px;}
+.label{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.input{width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;color:var(--t1);background:var(--bg);font-family:inherit;}
+.input:focus{outline:none;border-color:var(--blue);}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:11px;font-weight:600;color:var(--t2);}
+.chip-more{background:var(--blue-l);color:var(--blue);border-color:transparent;cursor:pointer;}
+.chip-del{color:var(--t3);cursor:pointer;font-size:10px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:var(--blue-h);}
+.btn-secondary{background:var(--bg);color:var(--t2);border:1px solid var(--bd);}
+.btn-full{width:100%;padding:12px;font-size:14px;}
+.tone-row{display:flex;gap:6px;}
+.tone-btn{flex:1;padding:9px 6px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;color:var(--t2);background:var(--bg);}
+.tone-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
+.ch-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.ch-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);color:var(--t2);background:var(--bg);}
+.ch-chip.on{border-color:currentColor;background:var(--blue-l);color:var(--blue);}
+.ch-chip.gray{opacity:.45;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sidebar{width:220px;flex-shrink:0;background:var(--card);border-right:1px solid var(--bdl);display:flex;flex-direction:column;padding:16px 0;}
+.nav-logo{display:flex;align-items:center;gap:8px;padding:0 16px 14px;border-bottom:1px solid var(--bdl);margin-bottom:8px;}
+.logo-sq{width:32px;height:32px;background:linear-gradient(135deg,#1B64DA,#3182F6);border-radius:8px;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 14px;margin:0 6px;border-radius:7px;font-size:12.5px;color:var(--t2);cursor:pointer;}
+.nav-item.active{background:var(--blue-l);color:var(--blue);font-weight:700;}
+.nav-icon{font-size:10px;opacity:.6;width:14px;text-align:center;}
+.sum-box{background:var(--bg);border-radius:10px;padding:14px;border:1px solid var(--bdl);}
+.sum-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;}
+.sum-row .k{color:var(--t3);}
+.sum-row .v{font-weight:700;color:var(--t1);}
+.sum-row .v.blue{color:var(--blue);font-size:15px;}
+.section-tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;display:inline-block;margin-bottom:6px;}
+
+/* ─── CONCEPT A ─── */
+.ca-prog{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bdl);gap:6px;}
+.ca-step{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;}
+.ca-step .num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;}
+.ca-step .num.done{background:var(--blue);color:#fff;}
+.ca-step .num.cur{background:var(--warn);color:#fff;}
+.ca-step .num.todo{background:var(--bdl);color:var(--t3);}
+.ca-step .txt.done{color:var(--t3);}
+.ca-step .txt.cur{color:var(--warn);}
+.ca-step .txt.todo{color:var(--t3);}
+.ca-arrow{color:var(--bdl);font-size:12px;}
+.ca-body{padding:18px;}
+.ca-step-title{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.ca-step-title .n{width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+
+/* ─── CONCEPT B ─── */
+.cb-layout{display:flex;gap:0;}
+.cb-sidebar{width:55%;padding:18px;border-right:1px solid var(--bdl);overflow:hidden;}
+.cb-right{width:45%;padding:18px;background:var(--bg);}
+.cb-tabs{display:flex;gap:2px;background:var(--bg);padding:3px;border-radius:8px;margin-bottom:14px;}
+.cb-tab{flex:1;padding:6px;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;text-align:center;color:var(--t2);background:transparent;font-family:inherit;}
+.cb-tab.active{background:var(--card);color:var(--blue);box-shadow:var(--shadow);}
+.kw-row{margin-bottom:8px;}
+.kw-label{font-size:11px;color:var(--t3);font-weight:600;margin-bottom:4px;}
+.kw-chips{display:flex;flex-wrap:wrap;gap:4px;}
+
+/* ─── CONCEPT C ─── */
+.cc-section{border:1px solid var(--bdl);border-radius:12px;overflow:hidden;margin-bottom:10px;}
+.cc-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);cursor:pointer;}
+.cc-hdr-left{display:flex;align-items:center;gap:8px;}
+.cc-hdr-num{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cc-hdr-title{font-size:13px;font-weight:700;color:var(--t1);}
+.cc-hdr-sub{font-size:11px;color:var(--t3);}
+.cc-hdr-arrow{font-size:12px;color:var(--t3);}
+.cc-body{padding:14px 16px;background:var(--bg);border-top:1px solid var(--bdl);}
+.cc-kw-section{margin-bottom:10px;}
+.cc-kw-title{font-size:11px;font-weight:700;color:var(--t3);margin-bottom:5px;text-transform:uppercase;}
+.cc-kw-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.cc-kw-input{flex:1;min-width:80px;padding:6px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;background:var(--card);font-family:inherit;}
+.mini-btn{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:inherit;}
+.mini-btn-blue{background:var(--blue);color:#fff;}
+.mini-btn-gray{background:var(--bdl);color:var(--t2);}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="page-header">
+    <h1>SNS FLOW AUTO — 콘텐츠 생성 탭 레이아웃 3가지</h1>
+    <p>마음에 드는 콘셉트를 선택해 주세요. 선택 후 해당 디자인으로 전면 적용합니다.</p>
+  </div>
+
+  <div class="concepts">
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONCEPT A — 스텝 마법사형
+    ═══════════════════════════════════════════════════════ -->
+    <div class="concept-wrap">
+      <div class="concept-label">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span class="badge badge-a">Concept A</span>
+            <h2 style="font-size:16px;font-weight:800;">스텝 마법사형</h2>
+          </div>
+          <p style="font-size:12px;color:var(--t2);">단계별 진행 · 초보자 친화 · 실수 최소화</p>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <!-- 앱 전체 프레임 -->
+        <div style="display:flex;height:560px;overflow:hidden;">
+          <!-- 사이드바 -->
+          <div class="sidebar">
+            <div class="nav-logo">
+              <div class="logo-sq">SF</div>
+              <div><div style="font-size:12px;font-weight:800;">SNS FLOW</div><div style="font-size:9px;color:var(--t3);letter-spacing:2px;">AUTO</div></div>
+            </div>
+            <div class="nav-item active"><span class="nav-icon">✦</span>콘텐츠 생성</div>
+            <div class="nav-item"><span class="nav-icon">▦</span>발행 일정</div>
+            <div class="nav-item"><span class="nav-icon">○</span>보관함</div>
+            <div class="nav-item"><span class="nav-icon">◈</span>설정</div>
+            <div class="nav-item"><span class="nav-icon">⊙</span>진단</div>
+          </div>
+          <!-- 메인 -->
+          <div style="flex:1;overflow-y:auto;background:var(--bg);">
+            <div style="padding:18px 18px 0;border-bottom:1px solid var(--bdl);background:var(--card);">
+              <div style="font-size:15px;font-weight:800;margin-bottom:12px;">콘텐츠 자동화</div>
+              <!-- 진행 바 -->
+              <div class="ca-prog" style="padding:0 0 14px 0;gap:4px;">
+                <div class="ca-step"><div class="num done">✓</div><span class="txt done">소스</span></div>
+                <div class="ca-arrow">›</div>
+                <div class="ca-step"><div class="num cur">2</div><span class="txt cur" style="font-weight:800;">주제·키워드</span></div>
+                <div class="ca-arrow">›</div>
+                <div class="ca-step"><div class="num todo">3</div><span class="txt todo">채널·일정</span></div>
+                <div class="ca-arrow">›</div>
+                <div class="ca-step"><div class="num todo">4</div><span class="txt todo">시작</span></div>
+              </div>
+            </div>
+            <div style="padding:18px;">
+              <div class="ca-step-title"><div class="n">2</div> 주제 & 키워드 입력</div>
+
+              <!-- 주제 -->
+              <div class="card" style="margin-bottom:10px;">
+                <div class="label">주제</div>
+                <div style="display:flex;gap:6px;margin-bottom:8px;">
+                  <input class="input" style="flex:1;" placeholder="예) 여름 매출 올리는 소상공인 마케팅 전략" value="페이플레이 금융 서비스">
+                  <button class="btn btn-secondary" style="white-space:nowrap;">저장</button>
+                </div>
+                <div style="font-size:11px;color:var(--t3);margin-bottom:5px;">저장된 주제</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                  <span class="chip">테스트 <span class="chip-del">×</span></span>
+                  <span class="chip">페이플레이 <span class="chip-del">×</span></span>
+                  <span class="chip chip-more">+16개 더보기 ▾</span>
+                </div>
+              </div>
+
+              <!-- 키워드 3단 -->
+              <div class="card" style="margin-bottom:10px;">
+                <div class="label">키워드 3단 저장</div>
+                <div style="margin-bottom:8px;">
+                  <div class="kw-label">브랜드 키워드</div>
+                  <div class="cc-kw-row">
+                    <input class="cc-kw-input" placeholder="페이플레이, 결제솔루션…">
+                    <button class="mini-btn mini-btn-blue">저장</button>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+                    <span class="chip">페이플레이 <span class="chip-del">×</span></span>
+                    <span class="chip">결제솔루션 <span class="chip-del">×</span></span>
+                    <span class="chip chip-more">+3개 ▾</span>
+                  </div>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <div class="kw-label">메인 키워드</div>
+                  <div class="cc-kw-row">
+                    <input class="cc-kw-input" placeholder="소상공인 POS, 테이블오더…">
+                    <button class="mini-btn mini-btn-blue">저장</button>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+                    <span class="chip">소상공인 POS <span class="chip-del">×</span></span>
+                    <span class="chip chip-more">+2개 ▾</span>
+                  </div>
+                </div>
+                <div>
+                  <div class="kw-label">서브 키워드</div>
+                  <div class="cc-kw-row">
+                    <input class="cc-kw-input" placeholder="창업, 스마트오더…">
+                    <button class="mini-btn mini-btn-blue">저장</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 톤 -->
+              <div class="card" style="margin-bottom:14px;">
+                <div class="label">톤 & 매너</div>
+                <div class="tone-row">
+                  <div class="tone-btn">친근하게</div>
+                  <div class="tone-btn active">전문적으로</div>
+                  <div class="tone-btn">감성적으로</div>
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;">
+                <button class="btn btn-secondary">← 이전</button>
+                <button class="btn btn-primary">다음 단계 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="select-btn select-btn-a" onclick="choose('A')">A — 스텝 마법사형 선택</button>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONCEPT B — 2단 분할형
+    ═══════════════════════════════════════════════════════ -->
+    <div class="concept-wrap">
+      <div class="concept-label">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span class="badge badge-b">Concept B</span>
+            <h2 style="font-size:16px;font-weight:800;">2단 분할형</h2>
+          </div>
+          <p style="font-size:12px;color:var(--t2);">설정 + 실시간 요약 · 파워유저용</p>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div style="display:flex;height:560px;overflow:hidden;">
+          <!-- 사이드바 -->
+          <div class="sidebar">
+            <div class="nav-logo">
+              <div class="logo-sq">SF</div>
+              <div><div style="font-size:12px;font-weight:800;">SNS FLOW</div><div style="font-size:9px;color:var(--t3);letter-spacing:2px;">AUTO</div></div>
+            </div>
+            <div class="nav-item active"><span class="nav-icon">✦</span>콘텐츠 생성</div>
+            <div class="nav-item"><span class="nav-icon">▦</span>발행 일정</div>
+            <div class="nav-item"><span class="nav-icon">○</span>보관함</div>
+            <div class="nav-item"><span class="nav-icon">◈</span>설정</div>
+            <div class="nav-item"><span class="nav-icon">⊙</span>진단</div>
+          </div>
+          <!-- 2단 분할 메인 -->
+          <div style="flex:1;display:flex;overflow:hidden;">
+            <!-- 왼쪽 설정 -->
+            <div class="cb-sidebar" style="overflow-y:auto;">
+              <div style="font-size:15px;font-weight:800;margin-bottom:14px;">콘텐츠 자동화</div>
+
+              <!-- 소스 탭 -->
+              <div class="cb-tabs">
+                <button class="cb-tab active">주제 직접 입력</button>
+                <button class="cb-tab">URL 추출</button>
+                <button class="cb-tab">자료 붙여넣기</button>
+              </div>
+
+              <!-- 주제 -->
+              <div style="margin-bottom:12px;">
+                <div class="label">주제</div>
+                <div style="display:flex;gap:5px;margin-bottom:6px;">
+                  <input class="input" style="flex:1;" value="페이플레이 금융 서비스">
+                  <button class="btn btn-secondary">저장</button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px;">
+                  <span class="chip">테스트<span class="chip-del"> ×</span></span>
+                  <span class="chip">페이플레이<span class="chip-del"> ×</span></span>
+                  <span class="chip chip-more">+14개 ▾</span>
+                </div>
+              </div>
+
+              <!-- 키워드 3단 -->
+              <div style="margin-bottom:12px;">
+                <div class="label">키워드</div>
+                <div class="kw-row"><div class="kw-label">브랜드</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:3px;"><span class="chip">페이플레이<span class="chip-del"> ×</span></span><span class="chip">결제솔루션<span class="chip-del"> ×</span></span><span class="chip chip-more">+3 ▾</span></div>
+                </div>
+                <div class="kw-row" style="margin-top:5px;"><div class="kw-label">메인</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:3px;"><span class="chip">소상공인 POS<span class="chip-del"> ×</span></span><span class="chip chip-more">+2 ▾</span></div>
+                </div>
+                <div class="kw-row" style="margin-top:5px;"><div class="kw-label">서브</div>
+                  <input class="input" style="font-size:12px;padding:6px 10px;" placeholder="서브 키워드 입력">
+                </div>
+              </div>
+
+              <!-- 톤 -->
+              <div style="margin-bottom:12px;">
+                <div class="label">톤 & 매너</div>
+                <div class="tone-row">
+                  <div class="tone-btn">친근</div>
+                  <div class="tone-btn active">전문</div>
+                  <div class="tone-btn">감성</div>
+                </div>
+              </div>
+
+              <!-- 채널 -->
+              <div style="margin-bottom:12px;">
+                <div class="label">발행 채널 <span style="font-size:10px;color:var(--t3);font-weight:400;text-transform:none;">색상=연동 / 회색=미연동</span></div>
+                <div class="ch-grid">
+                  <div class="ch-chip on" style="color:#e1306c;border-color:#e1306c;"><div class="dot" style="background:#e1306c;"></div>인스타</div>
+                  <div class="ch-chip on" style="color:#000;border-color:#000;"><div class="dot" style="background:#000;"></div>스레드</div>
+                  <div class="ch-chip on" style="color:#FFCD00;border-color:#FFCD00;background:#fffce0;"><div class="dot" style="background:#FFCD00;"></div>카카오</div>
+                  <div class="ch-chip on" style="color:var(--blue);border-color:var(--blue);"><div class="dot" style="background:var(--blue);"></div>페이블로그</div>
+                  <div class="ch-chip gray">네이버</div>
+                  <div class="ch-chip gray">밴드</div>
+                  <div class="ch-chip gray">페북</div>
+                  <div class="ch-chip gray">당근</div>
+                </div>
+              </div>
+
+              <!-- 일정 -->
+              <div>
+                <div class="label">발행 일정</div>
+                <div style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--t1);">
+                  <span>수량</span>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <button class="btn btn-secondary" style="width:26px;height:26px;padding:0;font-size:16px;">-</button>
+                    <strong>4편</strong>
+                    <button class="btn btn-secondary" style="width:26px;height:26px;padding:0;font-size:16px;">+</button>
+                  </div>
+                  <span>매주</span>
+                  <input type="date" style="border:1.5px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:12px;font-family:inherit;color:var(--t1);" value="2026-06-07">
+                </div>
+              </div>
+            </div>
+
+            <!-- 오른쪽 요약 패널 -->
+            <div class="cb-right" style="overflow-y:auto;display:flex;flex-direction:column;">
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;">실시간 요약</div>
+              <div class="sum-box" style="flex:1;margin-bottom:14px;">
+                <div class="sum-row"><span class="k">소스</span><span class="v">직접 입력</span></div>
+                <div class="sum-row"><span class="k">주제</span><span class="v">페이플레이 금융 서비스</span></div>
+                <div class="sum-row"><span class="k">키워드</span><span class="v">5개 선택됨</span></div>
+                <div class="sum-row"><span class="k">채널</span><span class="v">4개 ON</span></div>
+                <div class="sum-row"><span class="k">수량</span><span class="v">4편</span></div>
+                <div class="sum-row"><span class="k">주기</span><span class="v">매주</span></div>
+                <div style="border-top:1px solid var(--bdl);margin:8px 0;"></div>
+                <div class="sum-row"><span class="k">총 생성</span><span class="v blue">16개</span></div>
+                <div class="sum-row"><span class="k">예상 시간</span><span class="v">약 40초</span></div>
+              </div>
+              <button class="btn btn-primary btn-full">✦ 자동화 시작</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="select-btn select-btn-b" onclick="choose('B')">B — 2단 분할형 선택</button>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONCEPT C — 미니멀 카드 접이형 (추천)
+    ═══════════════════════════════════════════════════════ -->
+    <div class="concept-wrap">
+      <div class="concept-label">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <span class="badge badge-c">Concept C</span>
+            <span class="badge badge-rec">추천</span>
+            <h2 style="font-size:16px;font-weight:800;">카드 접이형</h2>
+          </div>
+          <p style="font-size:12px;color:var(--t2);">컴팩트 · 필요할 때만 펼치기 · 균형잡힌 UX</p>
+        </div>
+      </div>
+
+      <div class="mockup">
+        <div style="display:flex;height:560px;overflow:hidden;">
+          <!-- 사이드바 -->
+          <div class="sidebar">
+            <div class="nav-logo">
+              <div class="logo-sq">SF</div>
+              <div><div style="font-size:12px;font-weight:800;">SNS FLOW</div><div style="font-size:9px;color:var(--t3);letter-spacing:2px;">AUTO</div></div>
+            </div>
+            <div class="nav-item active"><span class="nav-icon">✦</span>콘텐츠 생성</div>
+            <div class="nav-item"><span class="nav-icon">▦</span>발행 일정</div>
+            <div class="nav-item"><span class="nav-icon">○</span>보관함</div>
+            <div class="nav-item"><span class="nav-icon">◈</span>설정</div>
+            <div class="nav-item"><span class="nav-icon">⊙</span>진단</div>
+          </div>
+          <!-- 카드 메인 -->
+          <div style="flex:1;overflow-y:auto;background:var(--bg);padding:18px;">
+            <div style="font-size:15px;font-weight:800;margin-bottom:14px;">콘텐츠 자동화</div>
+
+            <!-- 카드 1: 소스 & 주제 (펼쳐짐) -->
+            <div class="cc-section">
+              <div class="cc-hdr">
+                <div class="cc-hdr-left">
+                  <div class="cc-hdr-num">1</div>
+                  <div><div class="cc-hdr-title">소스 & 주제</div><div class="cc-hdr-sub">직접 입력 · 저장됨 18개</div></div>
+                </div>
+                <span class="cc-hdr-arrow">▲</span>
+              </div>
+              <div class="cc-body">
+                <!-- 소스 탭 미니 -->
+                <div style="display:flex;gap:4px;margin-bottom:10px;">
+                  <button style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;background:var(--blue);color:#fff;font-family:inherit;">주제</button>
+                  <button style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--bd);background:var(--card);color:var(--t2);font-family:inherit;">URL</button>
+                  <button style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--bd);background:var(--card);color:var(--t2);font-family:inherit;">자료</button>
+                  <button style="padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--bd);background:var(--card);color:var(--t2);font-family:inherit;">다각화</button>
+                </div>
+                <!-- 주제 입력 -->
+                <div style="display:flex;gap:5px;margin-bottom:6px;">
+                  <input class="cc-kw-input" style="flex:1;" placeholder="예) 여름 매출 올리는 마케팅 전략" value="페이플레이 금융 서비스 소개">
+                  <button class="mini-btn mini-btn-blue">저장</button>
+                </div>
+                <!-- 저장 주제 토글 -->
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
+                  <span class="chip">테스트<span class="chip-del"> ×</span></span>
+                  <span class="chip">페이플레이<span class="chip-del"> ×</span></span>
+                  <span class="chip chip-more">+16개 더보기 ▾</span>
+                </div>
+                <!-- 키워드 3단 -->
+                <div style="font-size:11px;font-weight:700;color:var(--t1);margin-bottom:6px;">키워드</div>
+                <div class="cc-kw-section">
+                  <div class="cc-kw-title">브랜드</div>
+                  <div class="cc-kw-row" style="margin-bottom:4px;">
+                    <span class="chip">페이플레이<span class="chip-del"> ×</span></span>
+                    <span class="chip">결제솔루션<span class="chip-del"> ×</span></span>
+                    <span class="chip chip-more">+3 ▾</span>
+                    <input class="cc-kw-input" placeholder="추가...">
+                    <button class="mini-btn mini-btn-blue">+</button>
+                  </div>
+                </div>
+                <div class="cc-kw-section">
+                  <div class="cc-kw-title">메인</div>
+                  <div class="cc-kw-row" style="margin-bottom:4px;">
+                    <span class="chip">소상공인 POS<span class="chip-del"> ×</span></span>
+                    <span class="chip chip-more">+2 ▾</span>
+                    <input class="cc-kw-input" placeholder="추가...">
+                    <button class="mini-btn mini-btn-blue">+</button>
+                  </div>
+                </div>
+                <div class="cc-kw-section">
+                  <div class="cc-kw-title">서브</div>
+                  <div class="cc-kw-row">
+                    <input class="cc-kw-input" placeholder="창업, 스마트오더 등…">
+                    <button class="mini-btn mini-btn-blue">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 카드 2: 톤 (접힘) -->
+            <div class="cc-section">
+              <div class="cc-hdr" style="background:var(--card);">
+                <div class="cc-hdr-left">
+                  <div class="cc-hdr-num" style="background:var(--bdl);color:var(--t3);">2</div>
+                  <div><div class="cc-hdr-title">톤 & 이미지</div><div class="cc-hdr-sub">전문적으로 · 기본 템플릿</div></div>
+                </div>
+                <span class="cc-hdr-arrow">▼</span>
+              </div>
+            </div>
+
+            <!-- 카드 3: 채널·일정 (접힘) -->
+            <div class="cc-section">
+              <div class="cc-hdr">
+                <div class="cc-hdr-left">
+                  <div class="cc-hdr-num" style="background:var(--bdl);color:var(--t3);">3</div>
+                  <div><div class="cc-hdr-title">채널 & 일정</div><div class="cc-hdr-sub">4채널 ON · 매주 4편 · 6/7 시작</div></div>
+                </div>
+                <span class="cc-hdr-arrow">▼</span>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <button class="btn btn-primary btn-full" style="margin-top:4px;font-size:14px;font-weight:800;">✦ 자동화 시작 — 16개 콘텐츠 생성</button>
+          </div>
+        </div>
+      </div>
+      <button class="select-btn" onclick="choose('C')">C — 카드 접이형 선택 (추천)</button>
+    </div>
+
+  </div><!-- /concepts -->
+
+  <!-- 선택 결과 -->
+  <div id="result" style="display:none;margin-top:36px;text-align:center;padding:28px;background:var(--card);border-radius:16px;border:2px solid var(--blue);">
+    <div id="result-msg" style="font-size:18px;font-weight:800;color:var(--blue);margin-bottom:8px;"></div>
+    <div style="font-size:14px;color:var(--t2);">Claude Code 채팅창에 '<strong>Concept X 선택</strong>'이라고 입력하시면 바로 적용합니다.</div>
+  </div>
+
+</div>
+<script>
+function choose(c){
+  const names={A:'스텝 마법사형',B:'2단 분할형',C:'카드 접이형 (추천)'};
+  document.getElementById('result').style.display='block';
+  document.getElementById('result-msg').textContent='Concept '+c+' — '+names[c]+' 선택됨';
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'center'});
+}
+</script>
+</body>
+</html>
