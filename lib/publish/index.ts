@@ -17,12 +17,15 @@ async function publishInstagram(p: IPublishPayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ image_url: p.imageUrl, caption, access_token: token }),
   })
+  if (!r.ok) throw new Error(`Instagram 미디어 생성 실패 ${r.status}`)
   const media = await r.json()
-  await fetch("https://graph.instagram.com/v18.0/me/media_publish", {
+  if (media.error) throw new Error(media.error.message)
+  const pub = await fetch("https://graph.instagram.com/v18.0/me/media_publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ creation_id: media.id, access_token: token }),
   })
+  if (!pub.ok) throw new Error(`Instagram 발행 실패 ${pub.status}`)
   return { success: true }
 }
 
@@ -34,19 +37,22 @@ async function publishThreads(p: IPublishPayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ media_type: p.imageUrl ? "IMAGE" : "TEXT", text: p.body, image_url: p.imageUrl, access_token: token }),
   })
+  if (!r.ok) throw new Error(`Threads 미디어 생성 실패 ${r.status}`)
   const media = await r.json()
-  await fetch("https://graph.threads.net/v1.0/me/threads_publish", {
+  if (media.error) throw new Error(media.error.message)
+  const pub = await fetch("https://graph.threads.net/v1.0/me/threads_publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ creation_id: media.id, access_token: token }),
   })
+  if (!pub.ok) throw new Error(`Threads 발행 실패 ${pub.status}`)
   return { success: true }
 }
 
 async function publishKakao(p: IPublishPayload) {
   const key = process.env.KAKAO_CLIENT_ID
   if (!key) throw new Error("카카오 키 미설정")
-  await fetch("https://kapi.kakao.com/v2/api/talk/memo/default/send", {
+  const res = await fetch("https://kapi.kakao.com/v2/api/talk/memo/default/send", {
     method: "POST",
     headers: { Authorization: `KakaoAK ${key}`, "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -61,17 +67,24 @@ async function publishKakao(p: IPublishPayload) {
       }),
     }),
   })
+  if (!res.ok) throw new Error(`카카오 발행 실패 ${res.status}`)
+  const data = await res.json()
+  if (data.result_code !== 0) throw new Error(`카카오 오류: ${data.msg || res.status}`)
   return { success: true }
 }
 
 async function publishPayplay(p: IPublishPayload, board: "blog" | "press") {
   const { PAYPLAY_API_URL, PAYPLAY_API_SECRET } = process.env
   if (!PAYPLAY_API_URL) throw new Error("페이플레이 URL 미설정")
-  await fetch(`${PAYPLAY_API_URL}/api/posts/create`, {
+  const res = await fetch(`${PAYPLAY_API_URL}/api/posts/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-api-secret": PAYPLAY_API_SECRET || "" },
     body: JSON.stringify({ board, title: p.title, body: p.body, imageUrl: p.imageUrl, tags: p.hashtags }),
   })
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "")
+    throw new Error(`페이플레이 발행 실패 ${res.status}${msg ? `: ${msg.slice(0, 80)}` : ""}`)
+  }
   return { success: true }
 }
 
