@@ -24,16 +24,16 @@ const TONE_OPTIONS: { id: TTone; label: string; desc: string }[] = [
   { id: "emotional",    label: "감성적으로",  desc: "공감·스토리텔링" },
 ]
 
-const SOURCE_OPTIONS: { id: TSourceType; label: string; desc: string }[] = [
-  { id: "MANUAL",      label: "주제 직접 입력", desc: "키워드만 입력하면 AI가 작성" },
-  { id: "DIVERSIFIED", label: "주제 다각화",    desc: "편별로 다른 각도 자동 설계" },
-  { id: "URL",         label: "URL 추출",       desc: "링크 입력 → 내용 분석 후 작성" },
-  { id: "FILE",        label: "자료 붙여넣기",  desc: "브로셔·공문 등 텍스트 기반" },
+const SOURCE_OPTIONS: { id: TSourceType; label: string }[] = [
+  { id: "MANUAL",      label: "주제" },
+  { id: "DIVERSIFIED", label: "다각화" },
+  { id: "URL",         label: "URL" },
+  { id: "FILE",        label: "자료" },
 ]
 
 const IMAGE_ENGINES: { id: TImageEngine; label: string; desc: string }[] = [
-  { id: "custom", label: "기본 템플릿", desc: "SFA 제공 브랜드 디자인" },
-  { id: "canva",  label: "캔바 연동",   desc: "내 캔바 템플릿 사용" },
+  { id: "custom", label: "기본 템플릿", desc: "SFA 브랜드 디자인" },
+  { id: "canva",  label: "캔바 연동",   desc: "내 캔바 템플릿" },
 ]
 
 const STATUS_STYLE = {
@@ -43,7 +43,67 @@ const STATUS_STYLE = {
   failed:    { label: "실패",     cls: "badge-red" },
 }
 
+const CHANNEL_GROUPS: { id: 1|2|3; label: string; channels: TChannel[] }[] = [
+  { id: 1, label: "SNS",  channels: ["INSTAGRAM","THREADS","KAKAO_CHANNEL"] },
+  { id: 2, label: "블로그", channels: ["BLOG_NAVER","NEWS_HOMEPAGE","PAYPLAY_BLOG","PAYPLAY_PRESS"] },
+  { id: 3, label: "기타",  channels: ["DAANGN","BAND","FACEBOOK"] },
+]
+
+const CHANNEL_CONNECTED = new Set<TChannel>(["PAYPLAY_BLOG","PAYPLAY_PRESS"])
+
 type TNav = "home" | "create" | "schedule" | "storage" | "settings" | "admin"
+
+// ── SVG 아이콘 ────────────────────────────────
+const IcoHome = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+)
+const IcoCreate = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </svg>
+)
+const IcoCalendar = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+)
+const IcoFolder = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+  </svg>
+)
+const IcoSettings = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+  </svg>
+)
+const IcoShield = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+)
+const IcoChevLeft = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+const IcoChevRight = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+)
+const IcoChevDown = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+)
+const IcoX = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={10} height={10}>
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
 
 // ── 유틸 ─────────────────────────────────────
 function genDates(count: number, start: string, freq: string): Date[] {
@@ -57,51 +117,25 @@ function genDates(count: number, start: string, freq: string): Date[] {
     return d
   })
 }
-
 function fmtDate(d: Date) {
   const days = ["일","월","화","수","목","금","토"]
   return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`
 }
-
-function todayStr() {
-  return new Date().toISOString().split("T")[0]
-}
-
+function todayStr() { return new Date().toISOString().split("T")[0] }
 function getChannelText(item: IScheduleItem, ch: TChannel): string {
   if (!item.content) return ""
   const c = item.content
   switch (ch) {
-    case "BLOG_NAVER":
-    case "PAYPLAY_BLOG":    return `${c.blog.title}\n\n${c.blog.body}\n\nSEO: ${c.blog.seoKeywords.join(", ")}`
-    case "NEWS_HOMEPAGE":
-    case "PAYPLAY_PRESS":   return `${c.news.headline}\n${c.news.subheadline}\n\n${c.news.body}\n\n태그: ${c.news.tags.join(", ")}`
-    case "INSTAGRAM":       return `${c.instagram.caption}\n\n${c.instagram.hashtags.join(" ")}`
-    case "THREADS":         return c.threads.post
-    case "KAKAO_CHANNEL":   return `${c.kakao.title}\n\n${c.kakao.body}`
-    default:                return c.blog.body
+    case "BLOG_NAVER": case "PAYPLAY_BLOG":  return `${c.blog.title}\n\n${c.blog.body}\n\nSEO: ${c.blog.seoKeywords.join(", ")}`
+    case "NEWS_HOMEPAGE": case "PAYPLAY_PRESS": return `${c.news.headline}\n${c.news.subheadline}\n\n${c.news.body}\n\n태그: ${c.news.tags.join(", ")}`
+    case "INSTAGRAM": return `${c.instagram.caption}\n\n${c.instagram.hashtags.join(" ")}`
+    case "THREADS":   return c.threads.post
+    case "KAKAO_CHANNEL": return `${c.kakao.title}\n\n${c.kakao.body}`
+    default: return c.blog.body
   }
 }
 
-// ── 컴포넌트 ──────────────────────────────────
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <div className="card" style={style}>{children}</div>
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 10 }}>{children}</div>
-}
-
-function PrimaryBtn({ children, onClick, disabled, style }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; style?: React.CSSProperties }) {
-  return (
-    <button onClick={onClick} disabled={disabled}
-      className={`btn btn-primary btn-full${disabled ? "" : ""}`}
-      style={style}>
-      {children}
-    </button>
-  )
-}
-
-// ── 메인 ─────────────────────────────────────
+// ── 메인 컴포넌트 ─────────────────────────────
 export default function SFA() {
   const [nav, setNav] = useState<TNav>("home")
 
@@ -109,7 +143,6 @@ export default function SFA() {
   const [sourceType, setSourceType] = useState<TSourceType>("MANUAL")
   const [topic, setTopic] = useState("")
   const [sourceContent, setSourceContent] = useState("")
-  const [keywords, setKeywords] = useState("")
   const [tone, setTone] = useState<TTone>("friendly")
   const [count, setCount] = useState(4)
   const [freq, setFreq] = useState("weekly")
@@ -117,6 +150,14 @@ export default function SFA() {
   const [channels, setChannels] = useState<TChannel[]>(["INSTAGRAM","THREADS","KAKAO_CHANNEL","PAYPLAY_BLOG"])
   const [imageEngine, setImageEngine] = useState<TImageEngine>("custom")
   const [canvaKey, setCanvaKey] = useState("")
+
+  // 키워드 3단
+  const [brandKws, setBrandKws] = useState<string[]>([])
+  const [mainKws, setMainKws]   = useState<string[]>([])
+  const [subKws, setSubKws]     = useState<string[]>([])
+  const [bKwIn, setBKwIn] = useState("")
+  const [mKwIn, setMKwIn] = useState("")
+  const [sKwIn, setSKwIn] = useState("")
 
   // 상태
   const [generating, setGenerating] = useState(false)
@@ -137,26 +178,26 @@ export default function SFA() {
   const [diagResult, setDiagResult] = useState<any>(null)
   const [diagLoading, setDiagLoading] = useState(false)
 
-  // DB 히스토리
+  // DB
   const [dbItems, setDbItems] = useState<IScheduleItem[]>([])
   const [dbLoading, setDbLoading] = useState(false)
 
-  // localStorage 저장 데이터
+  // localStorage
   const [savedTopics, setSavedTopics]       = useState<SavedTopic[]>([])
   const [savedURLs, setSavedURLs]           = useState<SavedURL[]>([])
   const [savedMaterials, setSavedMaterials] = useState<SavedMaterial[]>([])
   const [brandProfiles, setBrandProfiles]   = useState<BrandProfile[]>(DEFAULT_BRANDS)
   const [activeBrandId, setActiveBrandIdState] = useState<string>("b1")
 
-  // UI 상태
-  const [isDragging, setIsDragging]         = useState(false)
+  // UI
+  const [isDragging, setIsDragging]       = useState(false)
   const [showChannelGuide, setShowChannelGuide] = useState(false)
-  const [showMoreGuide, setShowMoreGuide]   = useState(false)
+  const [showMoreGuide, setShowMoreGuide] = useState(false)
   const [scheduleDeadline, setScheduleDeadline] = useState("")
   const [editingBrandId, setEditingBrandId] = useState<string | null>(null)
   const fileDropRef = useRef<HTMLTextAreaElement>(null)
 
-  // 발행 일정 — 인라인 편집 / 재작성 / 이미지
+  // 발행 편집
   const [editedContent, setEditedContent]   = useState<Record<string, string>>({})
   const [showImageView, setShowImageView]   = useState<Record<string, boolean>>({})
   const [imageCache, setImageCache]         = useState<Record<string, string>>({})
@@ -165,11 +206,41 @@ export default function SFA() {
   const [scheduledDate, setScheduledDate]   = useState<Record<string, string>>({})
   const [showSchedulePanel, setShowSchedulePanel] = useState(false)
 
-  // 수정 요청 게시판
-  const [fixRequests, setFixRequests]       = useState<FixRequest[]>([])
-  const [newFix, setNewFix]                 = useState({ title: "", content: "", images: [] as string[] })
-  const [isDraggingFix, setIsDraggingFix]   = useState(false)
-  const [editingFixId, setEditingFixId]     = useState<string | null>(null)
+  // 수정 요청
+  const [fixRequests, setFixRequests]   = useState<FixRequest[]>([])
+  const [newFix, setNewFix]             = useState({ title: "", content: "", images: [] as string[] })
+  const [isDraggingFix, setIsDraggingFix] = useState(false)
+  const [editingFixId, setEditingFixId] = useState<string | null>(null)
+
+  // ── 4단 레이아웃 상태 ──
+  const [d2Open, setD2Open]   = useState(false)
+  const [d2Tab, setD2Tab]     = useState<1|2|3>(1)
+  const [rightOpen, setRightOpen] = useState(true)
+  const [sections, setSections] = useState({ source: true, tone: false, schedule: false })
+  const toggleSection = (k: keyof typeof sections) => setSections(p => ({ ...p, [k]: !p[k] }))
+
+  // 주제 드롭다운
+  const [topicDropOpen, setTopicDropOpen] = useState(false)
+  const [topicSearch, setTopicSearch]     = useState("")
+  const topicDropRef = useRef<HTMLDivElement>(null)
+
+  // D2 auto-open
+  useEffect(() => {
+    if (nav === "create") setD2Open(true)
+    else setD2Open(false)
+  }, [nav])
+
+  // 주제 드롭다운 외부 클릭 닫기
+  useEffect(() => {
+    if (!topicDropOpen) return
+    const handler = (e: MouseEvent) => {
+      if (topicDropRef.current && !topicDropRef.current.contains(e.target as Node)) {
+        setTopicDropOpen(false); setTopicSearch("")
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [topicDropOpen])
 
   // localStorage 로드
   useEffect(() => {
@@ -183,55 +254,66 @@ export default function SFA() {
     setFixRequests(getFixRequests())
   }, [])
 
+  const allKeywords = [...brandKws, ...mainKws, ...subKws].join(", ")
+
+  const addKw = (tier: "brand"|"main"|"sub", val: string) => {
+    const v = val.trim(); if (!v) return
+    if (tier === "brand") { setBrandKws(p => [...p, v]); setBKwIn("") }
+    else if (tier === "main") { setMainKws(p => [...p, v]); setMKwIn("") }
+    else { setSubKws(p => [...p, v]); setSKwIn("") }
+  }
+  const delKw = (tier: "brand"|"main"|"sub", i: number) => {
+    if (tier === "brand") setBrandKws(p => p.filter((_,j)=>j!==i))
+    else if (tier === "main") setMainKws(p => p.filter((_,j)=>j!==i))
+    else setSubKws(p => p.filter((_,j)=>j!==i))
+  }
+
   const switchBrand = (id: string) => {
-    setActiveBrandId(id)
-    setActiveBrandIdState(id)
+    setActiveBrandId(id); setActiveBrandIdState(id)
     const ab = getBrands().find(b => b.id === id)
     if (ab) setBrand({ name: ab.name, color: ab.color, hashtags: ab.hashtags })
   }
-
   const updateBrandProfile = (profile: BrandProfile) => {
     const updated = getBrands().map(b => b.id === profile.id ? profile : b)
-    saveBrands(updated)
-    setBrandProfiles(updated)
+    saveBrands(updated); setBrandProfiles(updated)
     if (profile.id === activeBrandId) setBrand({ name: profile.name, color: profile.color, hashtags: profile.hashtags })
   }
 
   const handleSaveTopic = () => {
     if (!topic.trim()) return
-    addTopic(topic, keywords)
-    setSavedTopics(getTopics())
+    addTopic(topic, allKeywords); setSavedTopics(getTopics())
   }
-  const handleSelectTopic = (t: SavedTopic) => { setTopic(t.text); setKeywords(t.keywords) }
+  const handleSelectTopic = (t: SavedTopic) => {
+    setTopic(t.text)
+    if (t.keywords) {
+      const kws = t.keywords.split(",").map(k => k.trim()).filter(Boolean)
+      setMainKws(kws)
+    }
+    setTopicDropOpen(false); setTopicSearch("")
+  }
   const handleDeleteTopic = (id: string) => { deleteTopic(id); setSavedTopics(getTopics()) }
 
   const handleSaveURL = () => {
     if (!sourceContent.trim() || sourceType !== "URL") return
-    addURL(sourceContent, sourceContent)
-    setSavedURLs(getURLs())
+    addURL(sourceContent, sourceContent); setSavedURLs(getURLs())
   }
   const handleSelectURL = (u: SavedURL) => setSourceContent(u.url)
   const handleDeleteURL = (id: string) => { deleteURL(id); setSavedURLs(getURLs()) }
 
   const handleSaveMaterial = () => {
     if (!sourceContent.trim() || sourceType !== "FILE") return
-    addMaterial(`자료 ${savedMaterials.length + 1}`, sourceContent)
-    setSavedMaterials(getMaterials())
+    addMaterial(`자료 ${savedMaterials.length + 1}`, sourceContent); setSavedMaterials(getMaterials())
   }
   const handleSelectMaterial = (m: SavedMaterial) => setSourceContent(m.content)
   const handleDeleteMaterial = (id: string) => { deleteMaterial(id); setSavedMaterials(getMaterials()) }
 
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault(); setIsDragging(false)
     const text = e.dataTransfer.getData("text/plain")
     const file = e.dataTransfer.files[0]
     if (text) { setSourceContent(text); return }
-    if (file && file.type === "text/plain") {
-      file.text().then(t => setSourceContent(t))
-    } else if (file) {
-      setSourceContent(`[파일: ${file.name}] — 내용을 직접 붙여넣어 주세요.`)
-    }
+    if (file && file.type === "text/plain") file.text().then(t => setSourceContent(t))
+    else if (file) setSourceContent(`[파일: ${file.name}] — 내용을 직접 붙여넣어 주세요.`)
   }, [])
 
   const loadHistory = useCallback(async () => {
@@ -269,23 +351,16 @@ export default function SFA() {
       const res = await fetch("/api/content/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, keywords, tone, count, sourceType, sourceContent, startDate, frequency: freq, channels }),
+        body: JSON.stringify({ topic, keywords: allKeywords, tone, count, sourceType, sourceContent, startDate, frequency: freq, channels }),
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
-
       const results: IScheduleItem[] = data.results.map((r: any, i: number) => {
         setGenLogs(p => p.map((l, idx) => idx === i ? { ...l, step: "완료", done: true } : l))
         return {
-          id: r.dbId || `${Date.now()}-${i}`,
-          index: r.index || i + 1,
-          topic: r.topic || topic,
-          angle: r.angle || "일반",
-          date: dates[i],
-          status: "draft" as const,
-          content: r.content,
-          channels,
-          dbId: r.dbId,
+          id: r.dbId || `${Date.now()}-${i}`, index: r.index || i + 1,
+          topic: r.topic || topic, angle: r.angle || "일반",
+          date: dates[i], status: "draft" as const, content: r.content, channels, dbId: r.dbId,
         }
       })
       setSchedule(results)
@@ -300,17 +375,11 @@ export default function SFA() {
 
   const handlePublish = async (item: IScheduleItem) => {
     if (!item.content) return
-    setPublishing(true)
-    setPublishResults([])
-    const payload = {
-      title: item.content.blog.title,
-      body: item.content.blog.body,
-      hashtags: item.content.instagram.hashtags,
-    }
+    setPublishing(true); setPublishResults([])
+    const payload = { title: item.content.blog.title, body: item.content.blog.body, hashtags: item.content.instagram.hashtags }
     try {
       const res = await fetch("/api/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channels: item.channels, payload, dbId: (item as any).dbId }),
       })
       const data = await res.json()
@@ -319,18 +388,16 @@ export default function SFA() {
   }
 
   const copy = (key: string, text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(key)
+    navigator.clipboard.writeText(text); setCopied(key)
     setTimeout(() => setCopied(null), 2000)
   }
 
-  // ── 인라인 편집 / 재작성 / 이미지 핸들러
-  const loadImage = async (itemId: string, topic: string) => {
+  const loadImage = async (itemId: string, t: string) => {
     if (imageCache[itemId]) return
     try {
       const res = await fetch("/api/image", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: topic, brand: brand.name, color: brand.color }),
+        body: JSON.stringify({ title: t, brand: brand.name, color: brand.color }),
       })
       if (res.ok) {
         const svg = await res.text()
@@ -345,12 +412,10 @@ export default function SFA() {
     try {
       const res = await fetch("/api/regenerate", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: item.topic, channel: ch, tone, keywords, angle: item.angle }),
+        body: JSON.stringify({ topic: item.topic, channel: ch, tone, keywords: allKeywords, angle: item.angle }),
       })
       const data = await res.json()
-      if (data.success && data.text) {
-        setEditedContent(p => ({ ...p, [`${item.id}-${ch}`]: data.text }))
-      }
+      if (data.success && data.text) setEditedContent(p => ({ ...p, [`${item.id}-${ch}`]: data.text }))
     } catch {}
     setRegenerating(false)
   }
@@ -358,16 +423,13 @@ export default function SFA() {
   const handleDraftSave = (itemId: string, ch: TChannel) => {
     const key = `${itemId}-${ch}`
     localStorage.setItem(`sfa_draft_${key}`, editedContent[key] || "")
-    setDraftSavedKey(key)
-    setTimeout(() => setDraftSavedKey(null), 2000)
+    setDraftSavedKey(key); setTimeout(() => setDraftSavedKey(null), 2000)
   }
 
-  // ── 수정 요청 핸들러
   const handleAddFix = () => {
     if (!newFix.title.trim()) return
     addFixRequest(newFix.title, newFix.content, newFix.images)
-    setNewFix({ title: "", content: "", images: [] })
-    setFixRequests(getFixRequests())
+    setNewFix({ title: "", content: "", images: [] }); setFixRequests(getFixRequests())
   }
 
   const handleFixImageDrop = (e: React.DragEvent) => {
@@ -390,78 +452,137 @@ export default function SFA() {
         headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
         body: JSON.stringify({ error: diagError, context: "SNS FLOW AUTO" }),
       })
-      const data = await res.json()
-      setDiagResult(data.analysis)
+      const data = await res.json(); setDiagResult(data.analysis)
     } finally { setDiagLoading(false) }
   }
 
-  // ─────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────
+  // ── 주제 칩 계산
+  const MAX_CHIPS = 3
+  const visibleTopics = savedTopics.slice(0, MAX_CHIPS)
+  const remainCount   = Math.max(0, savedTopics.length - MAX_CHIPS)
+  const filteredTopics = topicSearch
+    ? savedTopics.filter(t => t.text.toLowerCase().includes(topicSearch.toLowerCase()))
+    : savedTopics
 
-  const navItems: { id: TNav; label: string; icon: string }[] = [
-    { id: "create",   label: "콘텐츠 생성", icon: "✦" },
-    { id: "schedule", label: "발행 일정",    icon: "▦" },
-    { id: "storage",  label: "보관함",       icon: "○" },
-    { id: "settings", label: "설정",         icon: "◈" },
-    { id: "admin",    label: "진단",         icon: "⊙" },
+  // ── 네비 아이템
+  const navItems: { id: TNav; label: string; Icon: () => React.ReactElement }[] = [
+    { id: "home",     label: "홈",         Icon: IcoHome },
+    { id: "create",   label: "콘텐츠 생성", Icon: IcoCreate },
+    { id: "schedule", label: "발행 일정",   Icon: IcoCalendar },
+    { id: "storage",  label: "보관함",      Icon: IcoFolder },
+    { id: "settings", label: "설정",        Icon: IcoSettings },
+    { id: "admin",    label: "진단",        Icon: IcoShield },
   ]
 
+  // ── 키워드 섹션 컴포넌트
+  const KwSection = ({ tier, label, kws, inp, setInp, cls }: {
+    tier: "brand"|"main"|"sub"; label: string; kws: string[]; inp: string
+    setInp: (v:string)=>void; cls: string
+  }) => (
+    <div className="kw-section">
+      <div className={`kw-label ${cls}`}>
+        <span className={`kw-dot kw-dot-${tier}`} />
+        {label}
+      </div>
+      {kws.length > 0 && (
+        <div className="kw-chips">
+          {kws.map((k,i) => (
+            <span key={i} className={`kw-chip kw-chip-${tier}`}>
+              {k}
+              <button className="kw-chip-del" onClick={() => delKw(tier,i)}><IcoX /></button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="kw-add-row">
+        <input className="kw-input" placeholder={
+          tier === "brand" ? "페이플레이, 결제솔루션..." :
+          tier === "main"  ? "소상공인 POS, 테이블오더..." : "창업, 스마트오더..."
+        }
+          value={inp} onChange={e => setInp(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && addKw(tier, inp)} />
+        <button className="kw-add-btn"
+          style={{
+            background: tier === "brand" ? "var(--toss-blue)" : tier === "main" ? "var(--text-secondary)" : "var(--border)",
+            color: tier === "sub" ? "var(--text-secondary)" : "#fff",
+          }}
+          onClick={() => addKw(tier, inp)}>+</button>
+      </div>
+    </div>
+  )
+
+  // ════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════
   return (
     <div className="sfa-shell">
 
-      {/* ── 사이드바 ── */}
-      <aside className="sfa-sidebar">
-        <button
-          className="sfa-sidebar-logo"
-          onClick={() => setNav("home")}
-          style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 20px", borderBottom: "1px solid var(--border-light)", marginBottom: 12, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #1B64DA 0%, #3182F6 100%)", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", letterSpacing: -0.5, flexShrink: 0 }}>SF</div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", letterSpacing: -0.3 }}>SNS FLOW</div>
-            <div style={{ fontSize: 9, color: "var(--text-tertiary)", fontWeight: 700, letterSpacing: 2 }}>AUTO</div>
-          </div>
-        </button>
-
-        <nav style={{ flex: 1, padding: "0 8px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {navItems.map(item => (
-            <button key={item.id}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                borderRadius: "var(--radius-sm)", border: "none",
-                background: nav === item.id ? "var(--toss-blue-light)" : "transparent",
-                fontSize: 13, color: nav === item.id ? "var(--toss-blue)" : "var(--text-secondary)",
-                cursor: "pointer", textAlign: "left", fontWeight: nav === item.id ? 700 : 500,
-                transition: "all 0.15s",
-              }}
-              onClick={() => setNav(item.id)}>
-              <span style={{ fontSize: 11, opacity: 0.7, width: 14, textAlign: "center" }}>{item.icon}</span>
-              {item.label}
+      {/* ── D1: 아이콘 사이드바 ── */}
+      <aside className="d1-sidebar">
+        <button className="d1-logo" onClick={() => setNav("home")} title="SNS FLOW AUTO">SF</button>
+        <nav className="d1-nav">
+          {navItems.map(({ id, label, Icon }) => (
+            <button key={id} className={`d1-nav-btn ${nav === id ? "active" : ""}`}
+              onClick={() => setNav(id)} title={label}>
+              <Icon />
             </button>
           ))}
         </nav>
-
-        <div className="sfa-sidebar-stats" style={{ padding: "16px 20px 0", borderTop: "1px solid var(--border-light)", display: "flex", gap: 12 }}>
-          <div style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)" }}>{dbItems.length || schedule.length}</div>
-            <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginTop: 2 }}>총 콘텐츠</div>
-          </div>
-          <div style={{ flex: 1, textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--success)" }}>{dbItems.filter(s => s.status === "published").length || schedule.filter(s => s.status === "published").length}</div>
-            <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginTop: 2 }}>게시 완료</div>
-          </div>
-        </div>
       </aside>
 
-      {/* ── 메인 ── */}
+      {/* ── D2: 채널 사이드바 (create 탭만) ── */}
+      {d2Open && nav === "create" && (
+        <aside className="d2-sidebar">
+          <div className="d2-header">
+            <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)" }}>발행 채널</span>
+            <button className="d2-close-btn" onClick={() => setD2Open(false)} title="닫기">
+              <IcoChevLeft />
+            </button>
+          </div>
+
+          <div className="d2-tabs">
+            {CHANNEL_GROUPS.map(g => (
+              <button key={g.id} className={`d2-tab ${d2Tab === g.id ? "active" : ""}`}
+                onClick={() => setD2Tab(g.id)}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="d2-channel-list">
+            {CHANNEL_GROUPS.find(g => g.id === d2Tab)?.channels.map(ch => {
+              const m = CHANNEL_META[ch]; const on = channels.includes(ch)
+              const connected = CHANNEL_CONNECTED.has(ch)
+              return (
+                <button key={ch} className={`d2-ch-item ${on ? "on" : ""}`} onClick={() => toggleCh(ch)}>
+                  <div className="status-dot" style={{
+                    background: on ? m.color : "var(--border)",
+                    opacity: connected ? 1 : 0.55,
+                  }} />
+                  <span className="d2-ch-name">{m.label}</span>
+                  <div className={`d2-toggle ${on ? "on" : ""}`}
+                    style={{ background: on ? m.color : undefined }}>
+                    {on ? "ON" : ""}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="d2-legend">
+            <span>색상=연동</span>
+            <span>회색=미연동</span>
+          </div>
+        </aside>
+      )}
+
+      {/* ── D3: 메인 콘텐츠 ── */}
       <main className="sfa-main">
         <div className="sfa-content">
 
           {/* ══ 홈 ══ */}
           {nav === "home" && (
-            <div style={{ maxWidth: 840 }}>
-
-              {/* 헤더 */}
+            <div style={{ maxWidth: 820 }}>
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #1B64DA 0%, #3182F6 100%)", color: "#fff", fontSize: 15, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>SF</div>
@@ -471,13 +592,11 @@ export default function SFA() {
                   </div>
                 </div>
                 <div style={{ padding: "16px 20px", background: "var(--toss-blue-light)", borderRadius: "var(--radius-md)", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.8, borderLeft: "3px solid var(--toss-blue)" }}>
-                  주제 하나만 입력하면 <strong style={{ color: "var(--text-primary)" }}>블로그 · 뉴스 · 인스타그램 · 스레드 · 카카오</strong> 5개 채널용 콘텐츠를 Claude AI가 동시에 작성해요.<br />
-                  채널별로 내용을 복사하거나, 연동된 채널엔 자동 발행까지 한 번에 처리할 수 있어요.
+                  주제 하나만 입력하면 <strong style={{ color: "var(--text-primary)" }}>블로그 · 뉴스 · 인스타그램 · 스레드 · 카카오</strong> 5개 채널용 콘텐츠를 Claude AI가 동시에 작성해요.
                 </div>
               </div>
 
-              {/* 통계 */}
-              <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
+              <div className="stats-grid" style={{ marginBottom: 28 }}>
                 {[
                   { label: "총 생성", value: dbItems.length, color: "var(--toss-blue)" },
                   { label: "게시 완료", value: dbItems.filter(i => i.status === "published").length, color: "var(--success)" },
@@ -490,14 +609,13 @@ export default function SFA() {
                 ))}
               </div>
 
-              {/* 3단계 사용법 */}
               <div className="card" style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>시작하는 방법</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   {[
-                    { step: 1, title: "주제 입력",       desc: "생성 탭 → 주제·키워드·톤 설정 후\n자동화 시작 클릭",           action: "create" as TNav },
-                    { step: 2, title: "내용 확인 · 복사", desc: "발행 일정 탭에서\n채널별 탭을 클릭하고 복사",               action: "schedule" as TNav },
-                    { step: 3, title: "SNS에 붙여넣기",   desc: "복사한 내용을 각 SNS에 직접 게시\n(연동 시 자동 발행 가능)", action: "storage" as TNav },
+                    { step: 1, title: "주제 입력",        desc: "생성 탭 → 주제·키워드·톤 설정 후\n자동화 시작 클릭", action: "create" as TNav },
+                    { step: 2, title: "내용 확인 · 복사",  desc: "발행 일정 탭에서\n채널별 탭을 클릭하고 복사", action: "schedule" as TNav },
+                    { step: 3, title: "SNS에 붙여넣기",    desc: "복사한 내용을 각 SNS에 직접 게시\n(연동 시 자동 발행 가능)", action: "storage" as TNav },
                   ].map(s => (
                     <button key={s.step} onClick={() => setNav(s.action)}
                       style={{ textAlign: "left", padding: 16, background: "var(--bg)", border: "1px solid var(--border-light)", borderRadius: "var(--radius-md)", cursor: "pointer", transition: "all 0.15s" }}>
@@ -511,159 +629,149 @@ export default function SFA() {
                 </div>
               </div>
 
-              {/* 채널별 발행 설명 */}
-              <div className="card" style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showChannelGuide ? 14 : 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>채널별 발행 방법</div>
-                  <button className="btn-ghost" onClick={() => setShowChannelGuide(v => !v)} style={{ fontSize: 12 }}>
-                    {showChannelGuide ? "접기" : "전체 보기"}
-                  </button>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: showChannelGuide ? 14 : 0 }}>
-                  {[
-                    { ch: "AI 글 생성",       ok: true,  status: "지금 바로 가능" },
-                    { ch: "복사 붙여넣기",     ok: true,  status: "지금 바로 가능" },
-                    { ch: "페이플레이 블로그", ok: false, status: "연동 준비 중" },
-                    { ch: "인스타·스레드",     ok: false, status: "Meta 심사 필요" },
-                    { ch: "카카오 채널",       ok: false, status: "API 심사 필요" },
-                    { ch: "당근·밴드·페이스북",ok: false, status: "미연동" },
-                  ].map(it => (
-                    <div key={it.ch} style={{ padding: "8px 12px", background: "var(--bg)", borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)" }}>{it.ch}</span>
-                      <span className={`badge ${it.ok ? "badge-green" : "badge-gray"}`}>{it.status}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {showChannelGuide && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {[
-                      { name: "네이버 블로그",       status: "복사 후 직접 게시", ok: false, simple: "한국에서 제일 많이 쓰는 블로그예요. 네이버 검색에 내 글이 노출돼요.", process: ["AI가 블로그 글을 완성해요", "발행 일정에서 '네이버 블로그' 탭 클릭", "'복사하기' 버튼 눌러 내용 복사", "blog.naver.com 에서 새 글 쓰기 → 붙여넣기 → 발행"], tip: "SEO 키워드가 자동으로 들어가서 검색에 더 잘 노출돼요." },
-                      { name: "홈페이지 뉴스",         status: "연동 준비 중",     ok: false, simple: "가게 홈페이지에 뉴스처럼 소식을 올릴 수 있어요.", process: ["AI가 뉴스 기사 형식으로 글을 써요", "홈페이지 API 연결 후 자동 발행 예정", "현재는 복사해서 홈페이지에 직접 붙여넣기"], tip: "역피라미드 기사 형식으로 써줘서 전문적으로 보여요." },
-                      { name: "인스타그램",             status: "Meta 심사 필요",  ok: false, simple: "사진과 이모지·해시태그가 가득한 글을 올리는 SNS예요. 젊은 고객들이 많이 봐요.", process: ["AI가 이모지+해시태그 포함 인스타 글을 써요", "복사하기로 내용 복사", "인스타그램 앱에서 새 게시물 → 붙여넣기 → 게시", "(자동 발행) Meta 개발자 계정 + 앱 심사 통과 후 가능"], tip: "Meta 앱 심사는 수일~수주 소요돼요. 당장은 복사 방식이 편해요." },
-                      { name: "스레드 (Threads)",        status: "Meta 심사 필요",  ok: false, simple: "인스타그램이 만든 짧은 글 SNS예요. 트위터처럼 텍스트 위주로 소통해요.", process: ["AI가 핵심만 담은 짧은 스레드 글을 써요", "복사해서 Threads 앱에 붙여넣기", "자동 발행은 인스타그램과 동일하게 Meta 심사 후 가능"], tip: "500자 이내로 핵심만 담아줘요." },
-                      { name: "카카오 채널",             status: "채널 연동 필요",  ok: false, simple: "카카오톡으로 단골 고객에게 알림을 보내는 기능이에요. 가게 소식이 카톡으로 바로 전달돼요.", process: ["AI가 친근한 카카오 채널 메시지를 써요", "복사해서 카카오 채널 관리자 센터에 붙여넣기", "(자동 발행) business.kakao.com 채널 개설 + API 심사 후"], tip: "카카오 채널 자동 발행은 사업자 인증 + 3~7일 심사가 필요해요." },
-                      { name: "페이플레이 블로그·언론보도", status: "연동 중 (곧 가능)", ok: true, simple: "페이플레이 홈페이지에 글이 올라가요. 홈페이지 방문자들이 볼 수 있어요.", process: ["AI가 블로그 글과 뉴스 형식 글을 써요", "자동 발행 클릭 시 페이플레이 홈페이지에 바로 게시", "현재 홈페이지 API 연결 작업 진행 중이에요"], tip: "곧 자동 발행이 가능해질 예정이에요!" },
-                    ].map(ch => (
-                      <div key={ch.name} style={{ border: "1px solid var(--border-light)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-                        <div style={{ padding: "10px 14px", background: ch.ok ? "#E6F9F2" : "var(--bg)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-primary)" }}>{ch.name}</div>
-                          <span className={`badge ${ch.ok ? "badge-green" : "badge-red"}`}>{ch.status}</span>
-                        </div>
-                        <div style={{ padding: "12px 14px" }}>
-                          <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8, lineHeight: 1.6 }}>{ch.simple}</div>
-                          <div style={{ fontSize: 12, color: "var(--text-tertiary)", lineHeight: 2 }}>
-                            {ch.process.map((step, i) => <div key={i}>{i + 1}. {step}</div>)}
-                          </div>
-                          <div style={{ marginTop: 8, fontSize: 12, color: "var(--text-secondary)", background: "var(--bg)", padding: "6px 10px", borderRadius: 6 }}>{ch.tip}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 자세한 사용 방법 */}
-              <div className="card" style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>자세한 사용 방법</div>
-                  <button className="btn-ghost" onClick={() => setShowMoreGuide(v => !v)} style={{ fontSize: 12 }}>
-                    {showMoreGuide ? "접기" : "더보기"}
-                  </button>
-                </div>
-                {showMoreGuide && (
-                  <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-                    {[
-                      { step: "STEP 1", title: "콘텐츠 생성 탭으로 이동", content: ["왼쪽 사이드바에서 '콘텐츠 생성'을 클릭하세요.", "콘텐츠 소스 선택: 주제를 직접 입력하거나, URL에서 추출하거나, 자료를 붙여넣을 수 있어요.", "주제 입력: '여름 매출 올리는 소상공인 마케팅 전략' 처럼 구체적으로 쓸수록 좋아요.", "키워드: '여름, 할인, 이벤트' 처럼 포함되길 원하는 단어를 쉼표로 구분해 넣으세요.", "톤 설정: 친근하게(일반 고객용), 전문적으로(B2B), 감성적으로(스토리텔링) 중 선택."] },
-                      { step: "STEP 2", title: "발행 채널 선택",             content: ["오른쪽 '발행 채널' 카드에서 올릴 채널을 켜고 끄세요.", "ON 표시된 채널만 글이 생성됩니다.", "처음엔 '네이버 블로그 + 인스타그램 + 스레드' 3개만 켜놓고 해보세요.", "발행 주기와 시작일을 설정하면 날짜별로 예약 일정이 잡혀요."] },
-                      { step: "STEP 3", title: "자동화 시작 클릭",           content: ["오른쪽 하단 '자동화 시작' 버튼을 누르세요.", "AI가 채널별로 글을 쓰는 동안 진행 상황이 실시간으로 표시돼요.", "보통 1편당 10~30초 정도 걸려요.", "글이 완성되면 자동으로 '발행 일정' 탭으로 이동해요."] },
-                      { step: "STEP 4", title: "발행 일정 탭에서 내용 확인", content: ["왼쪽 목록에서 편 번호를 클릭하면 상세 내용이 오른쪽에 나타나요.", "상단 탭(네이버 블로그, 인스타그램...)을 클릭해 채널별 내용을 확인하세요.", "내용이 마음에 안 들면 텍스트를 직접 수정할 수 있어요.", "인스타그램 탭에는 해시태그가 분리되어 표시돼요."] },
-                      { step: "STEP 5", title: "복사 → SNS에 붙여넣기",     content: ["'복사하기' 버튼을 누르면 내용이 클립보드에 복사돼요.", "네이버 블로그: blog.naver.com → 글쓰기 → 붙여넣기", "인스타그램: 앱 열기 → + 버튼 → 사진 선택 → 내용 붙여넣기", "스레드: 앱 열기 → 새 게시물 → 붙여넣기", "카카오: 카카오 채널 관리자 센터 → 메시지 발송 → 붙여넣기"] },
-                    ].map((s, i) => (
-                      <div key={i} style={{ background: "var(--bg)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-                        <div style={{ background: "var(--text-primary)", color: "#fff", padding: "7px 14px", fontSize: 11, fontWeight: 800, letterSpacing: 1 }}>{s.step}</div>
-                        <div style={{ padding: "12px 14px" }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text-primary)" }}>{s.title}</div>
-                          {s.content.map((line, j) => (
-                            <div key={j} style={{ fontSize: 13, color: j === 0 ? "var(--text-primary)" : "var(--text-secondary)", lineHeight: 1.8, paddingLeft: j > 0 ? 8 : 0 }}>
-                              {j > 0 ? "· " : ""}{line}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 현재 제한사항 */}
-              <div className="card" style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 10 }}>현재 알려진 제한사항</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "#78350F" }}>
+              <div className="card" style={{ background: "#FFFBEB", borderColor: "#FDE68A", marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 8 }}>현재 알려진 제한사항</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 13, color: "#78350F" }}>
                   <div>· <strong>생성 비용:</strong> Claude API 사용량만큼 과금됩니다. 생성 1회 ≈ $0.01~0.03</div>
-                  <div>· <strong>히스토리 저장:</strong> 배포 서버에서는 DB 설정 전까지 저장되지 않습니다</div>
                   <div>· <strong>자동 발행:</strong> 현재 대부분 채널은 소재 보관함 저장 모드입니다. 직접 복사해서 게시하세요</div>
                 </div>
               </div>
 
-              {/* CTA */}
-              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setNav("create")} className="btn btn-primary btn-full" style={{ flex: 2 }}>지금 바로 콘텐츠 만들기</button>
                 <button onClick={() => setNav("admin")} className="btn btn-secondary btn-full" style={{ flex: 1 }}>시스템 진단</button>
               </div>
             </div>
           )}
 
-          {/* ══ 생성 ══ */}
+          {/* ══ 생성 탭 — 아코디언 ══ */}
           {nav === "create" && !generating && (
-            <>
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>콘텐츠 자동화</div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>최소 정보 입력 → 블로그부터 SNS까지 자동 생성·발행</div>
+            <div className="create-wrap">
+              <div className="create-header">
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.3 }}>콘텐츠 자동화</div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>주제 입력 → AI가 멀티채널 콘텐츠 생성</div>
+                </div>
+                {!d2Open && (
+                  <button className="btn btn-secondary btn-sm" onClick={() => setD2Open(true)} style={{ gap: 5 }}>
+                    <IcoChevRight /> 채널 열기
+                  </button>
+                )}
               </div>
 
-              <div className="sfa-create-grid">
-                {/* 왼쪽 */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* ── 아코디언 1: 소스 & 주제 ── */}
+              <div className="accordion-card">
+                <button className={`accordion-header ${sections.source ? "open" : ""}`}
+                  onClick={() => toggleSection("source")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className="accordion-num"
+                      style={{ background: sections.source ? "var(--toss-blue)" : "var(--border-light)", color: sections.source ? "#fff" : "var(--text-tertiary)" }}>1</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>소스 & 주제</div>
+                      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 1 }}>
+                        {topic ? `"${topic.slice(0,20)}${topic.length>20?"…":""}"` : "주제 미입력"} · 저장 {savedTopics.length}개
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ color: "var(--text-tertiary)", display: "flex", transform: sections.source ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                    <IcoChevDown />
+                  </span>
+                </button>
 
-                  {/* 콘텐츠 소스 */}
-                  <div className="card">
-                    <SectionLabel>콘텐츠 소스</SectionLabel>
-                    <div className="source-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {sections.source && (
+                  <div className="accordion-body">
+                    {/* 소스 타입 탭 */}
+                    <div style={{ display: "flex", gap: 3, marginBottom: 14, background: "var(--bg-card)", padding: 3, borderRadius: 8, width: "fit-content", border: "1px solid var(--border-light)" }}>
                       {SOURCE_OPTIONS.map(s => (
                         <button key={s.id}
-                          style={{ padding: "12px 14px", border: `1.5px solid ${sourceType === s.id ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", background: sourceType === s.id ? "var(--toss-blue-light)" : "var(--bg-card)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
+                          style={{ padding: "6px 13px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", background: sourceType === s.id ? "var(--toss-blue)" : "transparent", color: sourceType === s.id ? "#fff" : "var(--text-secondary)" }}
                           onClick={() => setSourceType(s.id)}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: sourceType === s.id ? "var(--toss-blue)" : "var(--text-primary)", marginBottom: 3 }}>{s.label}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{s.desc}</div>
+                          {s.label}
                         </button>
                       ))}
                     </div>
-                  </div>
 
-                  {/* 입력 영역 */}
-                  <div className="card">
-                    <SectionLabel>{sourceType === "URL" ? "URL 입력" : sourceType === "FILE" ? "자료 붙여넣기 (드래그앤드롭 가능)" : "주제 입력"}</SectionLabel>
+                    {/* 직접입력 / 다각화 */}
+                    {(sourceType === "MANUAL" || sourceType === "DIVERSIFIED") && (
+                      <>
+                        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                          <input className="form-input" style={{ flex: 1, fontSize: 13 }}
+                            placeholder="예) 여름 매출 올리는 소상공인 마케팅 전략"
+                            value={topic} onChange={e => setTopic(e.target.value)} />
+                          <button onClick={handleSaveTopic} disabled={!topic.trim()}
+                            className="btn btn-secondary btn-sm">저장</button>
+                        </div>
+
+                        {/* 주제 칩 1줄 + 드롭다운 */}
+                        {savedTopics.length > 0 && (
+                          <div style={{ position: "relative", marginBottom: 16 }} ref={topicDropRef}>
+                            <div className="topic-chip-row">
+                              {visibleTopics.map(t => (
+                                <div key={t.id}
+                                  className={`topic-chip ${topic === t.text ? "selected" : ""}`}
+                                  onClick={() => handleSelectTopic(t)}>
+                                  {t.text.length > 12 ? t.text.slice(0,12)+"…" : t.text}
+                                  <button className="topic-chip-del"
+                                    onClick={e => { e.stopPropagation(); handleDeleteTopic(t.id) }}>
+                                    <IcoX />
+                                  </button>
+                                </div>
+                              ))}
+                              <button className="topic-chip-more"
+                                onClick={() => setTopicDropOpen(v => !v)}>
+                                {remainCount > 0 ? `+${remainCount}개 검색` : "검색"} <IcoChevDown />
+                              </button>
+                            </div>
+
+                            {topicDropOpen && (
+                              <div className="topic-dropdown">
+                                <div className="topic-dropdown-search">
+                                  <input className="form-input" style={{ fontSize: 12, padding: "7px 10px" }}
+                                    placeholder="주제 검색..." value={topicSearch}
+                                    onChange={e => setTopicSearch(e.target.value)} autoFocus />
+                                </div>
+                                <div className="topic-dropdown-list">
+                                  {filteredTopics.length === 0 ? (
+                                    <div style={{ padding: 12, textAlign: "center", fontSize: 12, color: "var(--text-tertiary)" }}>검색 결과 없음</div>
+                                  ) : filteredTopics.map(t => (
+                                    <div key={t.id} className="topic-dropdown-item"
+                                      onClick={() => handleSelectTopic(t)}>
+                                      <span style={{ flex: 1 }}>{t.text}</span>
+                                      <button onClick={e => { e.stopPropagation(); handleDeleteTopic(t.id) }}
+                                        className="btn-danger-ghost" style={{ padding: "2px 5px", fontSize: 11 }}>×</button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 키워드 3단 */}
+                        <div style={{ borderTop: "1px solid var(--border-light)", paddingTop: 14 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 12, letterSpacing: 0.5, textTransform: "uppercase" }}>키워드</div>
+                          <KwSection tier="brand" label="브랜드" kws={brandKws} inp={bKwIn} setInp={setBKwIn} cls="kw-label-brand" />
+                          <KwSection tier="main"  label="메인"   kws={mainKws}  inp={mKwIn} setInp={setMKwIn} cls="kw-label-main" />
+                          <KwSection tier="sub"   label="서브"   kws={subKws}   inp={sKwIn} setInp={setSKwIn} cls="kw-label-sub" />
+                        </div>
+                      </>
+                    )}
 
                     {/* URL 모드 */}
                     {sourceType === "URL" && (
                       <>
                         <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                           <input className="form-input" placeholder="https://..." value={sourceContent} onChange={e => setSourceContent(e.target.value)} style={{ flex: 1 }} />
-                          <button onClick={handleSaveURL} className="btn btn-secondary btn-sm" style={{ whiteSpace: "nowrap" }}>저장</button>
+                          <button onClick={handleSaveURL} className="btn btn-secondary btn-sm">저장</button>
                         </div>
                         {savedURLs.length > 0 && (
-                          <div>
-                            <div className="form-label">저장된 URL</div>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                              {savedURLs.map(u => (
-                                <div key={u.id} style={{ display: "flex", alignItems: "center", background: "var(--toss-blue-light)", borderRadius: 6, overflow: "hidden" }}>
-                                  <button onClick={() => handleSelectURL(u)} style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "var(--toss-blue)", fontWeight: 600 }}>{u.label.slice(0, 25)}</button>
-                                  <button onClick={() => handleDeleteURL(u.id)} className="btn-danger-ghost" style={{ padding: "2px 6px" }}>×</button>
-                                </div>
-                              ))}
-                            </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                            {savedURLs.map(u => (
+                              <div key={u.id} style={{ display: "flex", alignItems: "center", background: "var(--toss-blue-light)", borderRadius: 6, overflow: "hidden" }}>
+                                <button onClick={() => handleSelectURL(u)} style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "var(--toss-blue)", fontWeight: 600 }}>{u.label.slice(0,25)}</button>
+                                <button onClick={() => handleDeleteURL(u.id)} className="btn-danger-ghost" style={{ padding: "2px 6px" }}>×</button>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </>
@@ -672,14 +780,10 @@ export default function SFA() {
                     {/* 자료 모드 */}
                     {sourceType === "FILE" && (
                       <>
-                        <div
-                          onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-                          onDragLeave={() => setIsDragging(false)}
-                          onDrop={handleDrop}
+                        <div onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+                          onDragLeave={() => setIsDragging(false)} onDrop={handleDrop}
                           style={{ position: "relative" }}>
-                          <textarea
-                            ref={fileDropRef}
-                            className="form-input"
+                          <textarea ref={fileDropRef} className="form-input"
                             style={{ border: isDragging ? "1.5px dashed var(--toss-blue)" : undefined, background: isDragging ? "var(--toss-blue-light)" : undefined, minHeight: 120 }}
                             placeholder="여기에 텍스트를 붙여넣거나, 파일을 드래그해서 놓으세요..."
                             value={sourceContent} onChange={e => setSourceContent(e.target.value)} />
@@ -696,162 +800,139 @@ export default function SFA() {
                         </div>
                       </>
                     )}
+                  </div>
+                )}
+              </div>
 
-                    {/* 직접입력 / 다각화 모드 */}
-                    {(sourceType === "MANUAL" || sourceType === "DIVERSIFIED") && (
-                      <>
-                        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                          <input className="form-input" style={{ flex: 1 }}
-                            placeholder="예) 여름 매출 올리는 소상공인 마케팅 전략" value={topic} onChange={e => setTopic(e.target.value)} />
-                          <button onClick={handleSaveTopic} disabled={!topic.trim()} className="btn btn-secondary btn-sm" style={{ whiteSpace: "nowrap" }}>저장</button>
-                        </div>
-                        {savedTopics.length > 0 && (
-                          <div style={{ marginBottom: 10 }}>
-                            <div className="form-label">저장된 주제</div>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                              {savedTopics.map(t => (
-                                <div key={t.id} style={{ display: "flex", alignItems: "center", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" }}>
-                                  <button onClick={() => handleSelectTopic(t)} style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", fontSize: 11, color: "var(--text-secondary)", fontWeight: 600, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.text}</button>
-                                  <button onClick={() => handleDeleteTopic(t.id)} className="btn-danger-ghost" style={{ padding: "2px 6px" }}>×</button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        <input className="form-input"
-                          placeholder="키워드 (쉼표로 구분, 선택사항)" value={keywords} onChange={e => setKeywords(e.target.value)} />
-                      </>
-                    )}
+              {/* ── 아코디언 2: 톤 & 이미지 ── */}
+              <div className="accordion-card">
+                <button className={`accordion-header ${sections.tone ? "open" : ""}`}
+                  onClick={() => toggleSection("tone")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className="accordion-num"
+                      style={{ background: sections.tone ? "var(--text-secondary)" : "var(--border-light)", color: sections.tone ? "#fff" : "var(--text-tertiary)" }}>2</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>톤 & 이미지</div>
+                      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 1 }}>
+                        {TONE_OPTIONS.find(t => t.id === tone)?.label || "미선택"} · {imageEngine === "custom" ? "기본 템플릿" : "캔바"}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ color: "var(--text-tertiary)", display: "flex", transform: sections.tone ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                    <IcoChevDown />
+                  </span>
+                </button>
 
-                    {/* 톤 & 매너 */}
-                    <div style={{ marginTop: 16 }}>
-                      <SectionLabel>톤 & 매너</SectionLabel>
-                      <div style={{ display: "flex", gap: 8 }}>
+                {sections.tone && (
+                  <div className="accordion-body">
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.6 }}>톤 & 매너</div>
+                      <div style={{ display: "flex", gap: 6 }}>
                         {TONE_OPTIONS.map(t => (
                           <button key={t.id}
                             style={{ flex: 1, padding: "10px 8px", border: `1.5px solid ${tone === t.id ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", background: tone === t.id ? "var(--toss-blue-light)" : "var(--bg-card)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
                             onClick={() => setTone(t.id)}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: tone === t.id ? "var(--toss-blue)" : "var(--text-primary)" }}>{t.label}</div>
-                            <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 2 }}>{t.desc}</div>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: tone === t.id ? "var(--toss-blue)" : "var(--text-primary)" }}>{t.label}</div>
+                            <div style={{ fontSize: 10.5, color: "var(--text-tertiary)", marginTop: 2 }}>{t.desc}</div>
                           </button>
                         ))}
                       </div>
                     </div>
-                  </div>
-
-                  {/* 이미지 생성 방식 */}
-                  <div className="card">
-                    <SectionLabel>이미지 생성 방식</SectionLabel>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      {IMAGE_ENGINES.map(e => (
-                        <button key={e.id}
-                          style={{ padding: "12px 14px", border: `1.5px solid ${imageEngine === e.id ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", background: imageEngine === e.id ? "var(--toss-blue-light)" : "var(--bg-card)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-                          onClick={() => setImageEngine(e.id)}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: imageEngine === e.id ? "var(--toss-blue)" : "var(--text-primary)", marginBottom: 3 }}>{e.label}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>{e.desc}</div>
-                        </button>
-                      ))}
+                    <div>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-tertiary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.6 }}>이미지 생성</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        {IMAGE_ENGINES.map(e => (
+                          <button key={e.id}
+                            style={{ padding: "10px 12px", border: `1.5px solid ${imageEngine === e.id ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", background: imageEngine === e.id ? "var(--toss-blue-light)" : "var(--bg-card)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
+                            onClick={() => setImageEngine(e.id)}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: imageEngine === e.id ? "var(--toss-blue)" : "var(--text-primary)", marginBottom: 2 }}>{e.label}</div>
+                            <div style={{ fontSize: 10.5, color: "var(--text-tertiary)" }}>{e.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                      {imageEngine === "canva" && (
+                        <input className="form-input" style={{ marginTop: 8, fontSize: 12.5 }}
+                          placeholder="캔바 API Key" value={canvaKey} onChange={e => setCanvaKey(e.target.value)} />
+                      )}
                     </div>
-                    {imageEngine === "canva" && (
-                      <input className="form-input" style={{ marginTop: 10 }}
-                        placeholder="캔바 API Key" value={canvaKey} onChange={e => setCanvaKey(e.target.value)} />
-                    )}
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* 오른쪽 */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* ── 아코디언 3: 일정 ── */}
+              <div className="accordion-card">
+                <button className={`accordion-header ${sections.schedule ? "open" : ""}`}
+                  onClick={() => toggleSection("schedule")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className="accordion-num"
+                      style={{ background: sections.schedule ? "var(--text-secondary)" : "var(--border-light)", color: sections.schedule ? "#fff" : "var(--text-tertiary)" }}>3</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)" }}>일정</div>
+                      <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 1 }}>
+                        {count}편 · {FREQ_OPTIONS.find(f => f.id === freq)?.label} · {startDate} 시작
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ color: "var(--text-tertiary)", display: "flex", transform: sections.schedule ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                    <IcoChevDown />
+                  </span>
+                </button>
 
-                  {/* 발행 일정 */}
-                  <div className="card">
-                    <SectionLabel>발행 일정</SectionLabel>
+                {sections.schedule && (
+                  <div className="accordion-body">
                     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                       <div>
                         <div className="form-label">수량</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <button className="btn btn-secondary" style={{ width: 32, height: 32, padding: 0, fontSize: 18 }} onClick={() => setCount(c => Math.max(1, c - 1))}>−</button>
-                          <span style={{ fontWeight: 700, fontSize: 16, minWidth: 36, textAlign: "center", color: "var(--text-primary)" }}>{count}편</span>
-                          <button className="btn btn-secondary" style={{ width: 32, height: 32, padding: 0, fontSize: 18 }} onClick={() => setCount(c => Math.min(12, c + 1))}>+</button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <button className="btn btn-secondary" style={{ width: 30, height: 30, padding: 0, fontSize: 18 }} onClick={() => setCount(c => Math.max(1, c-1))}>−</button>
+                          <span style={{ fontWeight: 700, fontSize: 15, minWidth: 32, textAlign: "center" }}>{count}편</span>
+                          <button className="btn btn-secondary" style={{ width: 30, height: 30, padding: 0, fontSize: 18 }} onClick={() => setCount(c => Math.min(12, c+1))}>+</button>
                         </div>
                       </div>
                       <div>
                         <div className="form-label">발행 주기</div>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                           {FREQ_OPTIONS.map(f => (
                             <button key={f.id}
-                              style={{ padding: "6px 12px", borderRadius: "var(--radius-sm)", border: "none", background: freq === f.id ? "var(--toss-blue)" : "var(--bg)", color: freq === f.id ? "#fff" : "var(--text-secondary)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
+                              style={{ padding: "6px 12px", borderRadius: "var(--radius-sm)", border: "none", background: freq === f.id ? "var(--toss-blue)" : "var(--bg)", color: freq === f.id ? "#fff" : "var(--text-secondary)", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
                               onClick={() => setFreq(f.id)}>{f.label}</button>
                           ))}
                         </div>
                       </div>
                       <div>
                         <div className="form-label">시작일</div>
-                        <input type="date" className="form-input"
-                          value={startDate} onChange={e => setStartDate(e.target.value)} />
+                        <input type="date" className="form-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
                       </div>
                       <div>
-                        <div className="form-label">마감일 — 언제까지? (선택)</div>
+                        <div className="form-label">마감일 (선택)</div>
                         <input type="date" className="form-input"
                           style={scheduleDeadline ? { borderColor: "var(--warning)" } : undefined}
                           value={scheduleDeadline} onChange={e => setScheduleDeadline(e.target.value)} min={startDate} />
-                        {scheduleDeadline && (
-                          <div style={{ marginTop: 6, padding: "6px 10px", background: "#FFF4E0", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--warning)", fontWeight: 600 }}>
-                            {startDate} ~ {scheduleDeadline} 사이 {count}편 발행
-                          </div>
-                        )}
                       </div>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 14 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 12 }}>
                       {dates.map((d, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, background: "var(--toss-blue-light)", border: "1px solid #BFDBFE", borderRadius: 20, padding: "4px 10px", fontSize: 12, color: "var(--toss-blue)" }}>
-                          <span style={{ fontWeight: 800, fontSize: 11, background: "var(--toss-blue)", color: "#fff", borderRadius: 10, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 3, background: "var(--toss-blue-light)", border: "1px solid #BFDBFE", borderRadius: 16, padding: "3px 8px", fontSize: 11, color: "var(--toss-blue)" }}>
+                          <span style={{ fontWeight: 800, fontSize: 10, background: "var(--toss-blue)", color: "#fff", borderRadius: 8, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>{i+1}</span>
                           {fmtDate(d)}
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* 발행 채널 */}
-                  <div className="card">
-                    <SectionLabel>발행 채널</SectionLabel>
-                    <div className="channel-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                      {ALL_CHANNELS.map(ch => {
-                        const m = CHANNEL_META[ch]; const on = channels.includes(ch)
-                        return (
-                          <button key={ch}
-                            style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", border: `1.5px solid ${on ? m.color : "var(--border)"}`, borderRadius: "var(--radius-sm)", background: on ? "#fff" : "var(--bg)", cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}
-                            onClick={() => toggleCh(ch)}>
-                            <div className="status-dot" style={{ background: on ? m.color : "var(--border)" }} />
-                            <span style={{ flex: 1, fontSize: 11.5, fontWeight: 500, color: on ? "var(--text-primary)" : "var(--text-tertiary)" }}>{m.label}</span>
-                            {on && <span style={{ fontSize: 10, color: "#fff", background: m.color, padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>ON</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 자동화 요약 */}
-                  <div className="card">
-                    <SectionLabel>자동화 요약</SectionLabel>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-                      {[
-                        ["소스", { MANUAL: "직접 입력", DIVERSIFIED: "주제 다각화", URL: "URL 추출", FILE: "자료 기반" }[sourceType]],
-                        ["수량", `${count}편`],
-                        ["주기", { daily: "매일", weekly: "매주", biweekly: "격주", monthly: "매월" }[freq]],
-                        ["채널", `${channels.length}개`],
-                        ["총 생성", `${count * channels.length}개`],
-                      ].map(([k, v]) => (
-                        <div key={k as string} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                          <span style={{ color: "var(--text-tertiary)" }}>{k}</span>
-                          <span style={{ fontWeight: 700, color: k === "총 생성" ? "var(--toss-blue)" : "var(--text-primary)", fontSize: k === "총 생성" ? 16 : 13 }}>{v}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <PrimaryBtn onClick={handleGenerate} disabled={!topic && sourceType === "MANUAL"}>자동화 시작</PrimaryBtn>
-                  </div>
-                </div>
+                )}
               </div>
-            </>
+
+              {/* 우측 패널 닫혔을 때 하단 시작 버튼 */}
+              {!rightOpen && (
+                <div style={{ marginTop: 8 }}>
+                  <button className="btn btn-primary btn-full"
+                    onClick={handleGenerate}
+                    disabled={!topic.trim() && sourceType === "MANUAL"}>
+                    ✦ 자동화 시작 — {count * channels.length}개 콘텐츠
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* ══ 생성 중 ══ */}
@@ -865,7 +946,7 @@ export default function SFA() {
                   {genLogs.map((l, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "var(--bg)", borderRadius: "var(--radius-sm)" }}>
                       <div className="status-dot" style={{ background: l.done ? "var(--success)" : l.error ? "var(--danger)" : "var(--toss-blue)", animation: !l.done && !l.error ? "pulse 1.2s infinite" : undefined }} />
-                      <span style={{ flex: 1, fontSize: 13, fontWeight: 600, textAlign: "left", color: "var(--text-primary)" }}>{topic || "주제"} {i + 1}편</span>
+                      <span style={{ flex: 1, fontSize: 13, fontWeight: 600, textAlign: "left", color: "var(--text-primary)" }}>{topic || "주제"} {i+1}편</span>
                       <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{l.step}</span>
                       <span style={{ fontSize: 12 }}>{l.done ? "✓" : l.error ? "✗" : "…"}</span>
                     </div>
@@ -875,14 +956,14 @@ export default function SFA() {
             </div>
           )}
 
-          {/* ══ 일정 ══ */}
+          {/* ══ 발행 일정 ══ */}
           {nav === "schedule" && (() => {
             const displayItems = dbItems.length > 0 ? dbItems : schedule
             return (
               <>
                 <div style={{ marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>발행 일정</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>발행 일정</div>
                     <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>채널별 콘텐츠 검토 · 편집 · 복사 · 자동 발행</div>
                   </div>
                   <button onClick={loadHistory} className="btn btn-secondary btn-sm">{dbLoading ? "로딩 중..." : "새로고침"}</button>
@@ -925,9 +1006,8 @@ export default function SFA() {
                         </div>
                         <div style={{ display: "flex", borderBottom: "1px solid var(--border-light)", padding: "0 22px", overflowX: "auto" }}>
                           {activeItem.channels.map(ch => {
-                            const m = CHANNEL_META[ch as TChannel]
-                            if (!m) return null
-                            const CHANNEL_AUTO: Record<string, boolean> = { PAYPLAY_BLOG: true, PAYPLAY_PRESS: true }
+                            const m = CHANNEL_META[ch as TChannel]; if (!m) return null
+                            const CHANNEL_AUTO: Record<string,boolean> = { PAYPLAY_BLOG: true, PAYPLAY_PRESS: true }
                             const canAuto = CHANNEL_AUTO[ch] ?? false
                             return (
                               <button key={ch}
@@ -944,14 +1024,12 @@ export default function SFA() {
                             const ck = `${activeItem.id}-${activeChannel}`
                             const currentText = editedContent[ck] ?? getChannelText(activeItem, activeChannel)
                             const isImageView = showImageView[ck]
-                            const CHANNEL_AUTO: Record<string, boolean> = { INSTAGRAM: false, THREADS: false, KAKAO_CHANNEL: false, PAYPLAY_BLOG: true, PAYPLAY_PRESS: true, BLOG_NAVER: false, NEWS_HOMEPAGE: false }
-                            const CHANNEL_NOTE: Record<string, string> = { INSTAGRAM: "Meta 심사 필요", THREADS: "Meta 심사 필요", KAKAO_CHANNEL: "채널 연동 필요", PAYPLAY_BLOG: "API 연결 확인", PAYPLAY_PRESS: "API 연결 확인", BLOG_NAVER: "직접 게시", NEWS_HOMEPAGE: "직접 게시" }
+                            const CHANNEL_AUTO: Record<string,boolean> = { INSTAGRAM: false, THREADS: false, KAKAO_CHANNEL: false, PAYPLAY_BLOG: true, PAYPLAY_PRESS: true, BLOG_NAVER: false, NEWS_HOMEPAGE: false }
+                            const CHANNEL_NOTE: Record<string,string> = { INSTAGRAM: "Meta 심사 필요", THREADS: "Meta 심사 필요", KAKAO_CHANNEL: "채널 연동 필요", PAYPLAY_BLOG: "API 연결 확인", PAYPLAY_PRESS: "API 연결 확인", BLOG_NAVER: "직접 게시", NEWS_HOMEPAGE: "직접 게시" }
                             const canAuto = CHANNEL_AUTO[activeChannel] ?? false
                             return (
                               <>
-                                {/* 툴바 */}
                                 <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-                                  {/* 텍스트/이미지 토글 */}
                                   <div style={{ display: "flex", background: "var(--bg)", borderRadius: "var(--radius-sm)", padding: 3, gap: 2 }}>
                                     <button onClick={() => setShowImageView(p => ({ ...p, [ck]: false }))}
                                       style={{ padding: "5px 12px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s", background: !isImageView ? "white" : "transparent", color: !isImageView ? "var(--toss-blue)" : "var(--text-tertiary)", boxShadow: !isImageView ? "var(--shadow-sm)" : "none" }}>
@@ -963,20 +1041,17 @@ export default function SFA() {
                                     </button>
                                   </div>
                                   <button onClick={() => handleRegenerate(activeItem, activeChannel)} disabled={regenerating}
-                                    className="btn btn-secondary btn-sm" style={{ whiteSpace: "nowrap" }}>
+                                    className="btn btn-secondary btn-sm">
                                     {regenerating ? "재작성 중..." : "재작성"}
                                   </button>
                                   <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
                                     <button onClick={() => handleDraftSave(activeItem.id, activeChannel)} className="btn btn-secondary btn-sm">
                                       {draftSavedKey === ck ? "저장됨 ✓" : "임시 저장"}
                                     </button>
-                                    <button onClick={() => setShowSchedulePanel(v => !v)} className="btn btn-secondary btn-sm">
-                                      예약 발행
-                                    </button>
+                                    <button onClick={() => setShowSchedulePanel(v => !v)} className="btn btn-secondary btn-sm">예약 발행</button>
                                   </div>
                                 </div>
 
-                                {/* 채널 연동 상태 안내 */}
                                 <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
                                   <div className="status-dot" style={{ background: canAuto ? "var(--success)" : "var(--border)" }} />
                                   <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
@@ -984,7 +1059,6 @@ export default function SFA() {
                                   </span>
                                 </div>
 
-                                {/* 예약 발행 패널 */}
                                 {showSchedulePanel && (
                                   <div style={{ padding: 14, background: "var(--bg)", borderRadius: "var(--radius-md)", marginBottom: 14, border: "1px solid var(--border-light)" }}>
                                     <div className="form-label">예약 발행 일시</div>
@@ -997,11 +1071,9 @@ export default function SFA() {
                                         설정
                                       </button>
                                     </div>
-                                    {!canAuto && <div style={{ marginTop: 6, fontSize: 12, color: "var(--warning)" }}>이 채널은 API 연동 후 자동 발행 가능해요. 지금은 일정만 저장돼요.</div>}
                                   </div>
                                 )}
 
-                                {/* 콘텐츠 — 이미지+텍스트 or 텍스트만 */}
                                 {isImageView ? (
                                   <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
                                     <div style={{ flexShrink: 0 }}>
@@ -1011,19 +1083,16 @@ export default function SFA() {
                                       }
                                     </div>
                                     <textarea className="form-input" style={{ flex: 1, minHeight: 180, lineHeight: 1.8 }}
-                                      value={currentText}
-                                      onChange={e => setEditedContent(p => ({ ...p, [ck]: e.target.value }))} />
+                                      value={currentText} onChange={e => setEditedContent(p => ({ ...p, [ck]: e.target.value }))} />
                                   </div>
                                 ) : (
                                   <textarea className="form-input" style={{ minHeight: 240, marginBottom: 14, lineHeight: 1.8 }}
-                                    value={currentText}
-                                    onChange={e => setEditedContent(p => ({ ...p, [ck]: e.target.value }))} />
+                                    value={currentText} onChange={e => setEditedContent(p => ({ ...p, [ck]: e.target.value }))} />
                                 )}
 
-                                {/* 인스타 해시태그 */}
                                 {activeChannel === "INSTAGRAM" && activeItem.content.instagram.hashtags.length > 0 && (
                                   <div style={{ marginBottom: 14 }}>
-                                    <div className="section-label" style={{ marginBottom: 6 }}>해시태그 (키워드)</div>
+                                    <div className="section-label" style={{ marginBottom: 6 }}>해시태그</div>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                                       {activeItem.content.instagram.hashtags.map(h => (
                                         <span key={h} style={{ background: "var(--toss-blue-light)", color: "var(--toss-blue)", borderRadius: 20, padding: "3px 10px", fontSize: 12, fontWeight: 600 }}>{h}</span>
@@ -1032,12 +1101,12 @@ export default function SFA() {
                                   </div>
                                 )}
 
-                                {/* 하단 버튼 */}
                                 <div style={{ display: "flex", gap: 8, paddingTop: 14, borderTop: "1px solid var(--border-light)" }}>
                                   <button className="btn btn-secondary" onClick={() => copy(activeItem.id + activeChannel, currentText)}>
                                     {copied === activeItem.id + activeChannel ? "복사됨 ✓" : "복사하기"}
                                   </button>
-                                  <button className="btn btn-primary" onClick={() => handlePublish(activeItem)} disabled={publishing || !canAuto}
+                                  <button className="btn btn-primary" onClick={() => handlePublish(activeItem)}
+                                    disabled={publishing || !canAuto}
                                     title={canAuto ? "자동 발행" : "API 연동 후 사용 가능"}>
                                     {publishing ? "발행 중..." : canAuto ? "자동 발행" : "발행 불가 (연동 필요)"}
                                   </button>
@@ -1075,7 +1144,7 @@ export default function SFA() {
             <>
               <div style={{ marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>소재 보관함</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>소재 보관함</div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>생성된 전체 소재 · 원클릭 복사 · 발행 일정으로 이동</div>
                 </div>
                 <button onClick={loadHistory} className="btn btn-secondary btn-sm">{dbLoading ? "…" : "새로고침"}</button>
@@ -1115,11 +1184,10 @@ export default function SFA() {
           {nav === "settings" && (
             <>
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>브랜드 설정</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>브랜드 설정</div>
                 <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>최대 5개 브랜드 저장 · 활성 브랜드가 AI 글쓰기에 자동 반영됩니다</div>
               </div>
-
-              <div className="brand-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14, marginBottom: 24 }}>
+              <div className="brand-grid" style={{ marginBottom: 24 }}>
                 {brandProfiles.map(profile => (
                   <div key={profile.id} style={{ background: "var(--bg-card)", border: `2px solid ${activeBrandId === profile.id ? profile.color : "var(--border-light)"}`, borderRadius: "var(--radius-lg)", overflow: "hidden", transition: "border-color 0.15s", boxShadow: "var(--shadow-sm)" }}>
                     <div style={{ height: 4, background: profile.color }} />
@@ -1128,18 +1196,15 @@ export default function SFA() {
                         <div style={{ display: "inline-block", background: profile.color, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 10, marginBottom: 8 }}>현재 사용 중</div>
                       )}
                       <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>
-                        {profile.name || <span style={{ color: "var(--text-tertiary)", fontWeight: 400, fontSize: 13 }}>이름 없음 (편집해서 추가)</span>}
+                        {profile.name || <span style={{ color: "var(--text-tertiary)", fontWeight: 400, fontSize: 13 }}>이름 없음</span>}
                       </div>
                       {profile.keywords && <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 3 }}>키워드: {profile.keywords}</div>}
                       {profile.hashtags && <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 3 }}>태그: {profile.hashtags}</div>}
-                      {profile.blogUrl && <div style={{ fontSize: 11, color: "var(--toss-blue)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.blogUrl}</div>}
-                      {profile.note && <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginBottom: 3 }}>{profile.note}</div>}
                       <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
                         {activeBrandId !== profile.id && (
                           <button onClick={() => switchBrand(profile.id)} style={{ flex: 1, padding: "7px 0", background: profile.color, color: "#fff", border: "none", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>이걸로 사용</button>
                         )}
-                        <button
-                          onClick={() => setEditingBrandId(editingBrandId === profile.id ? null : profile.id)}
+                        <button onClick={() => setEditingBrandId(editingBrandId === profile.id ? null : profile.id)}
                           style={{ flex: activeBrandId !== profile.id ? 1 : 2, padding: "7px 0", background: editingBrandId === profile.id ? "var(--text-primary)" : "var(--bg)", color: editingBrandId === profile.id ? "#fff" : "var(--text-secondary)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.15s" }}>
                           {editingBrandId === profile.id ? "접기" : "편집"}
                         </button>
@@ -1149,8 +1214,8 @@ export default function SFA() {
                       <div style={{ borderTop: "1px solid var(--border-light)", padding: "14px 16px", background: "var(--bg)", display: "flex", flexDirection: "column", gap: 10 }}>
                         {([
                           { label: "브랜드명", key: "name", placeholder: "예) 페이플레이" },
-                          { label: "자주 쓰는 키워드", key: "keywords", placeholder: "소상공인, 창업, 마케팅" },
-                          { label: "고정 해시태그", key: "hashtags", placeholder: "#소상공인 #마케팅" },
+                          { label: "키워드", key: "keywords", placeholder: "소상공인, 창업, 마케팅" },
+                          { label: "해시태그", key: "hashtags", placeholder: "#소상공인 #마케팅" },
                           { label: "블로그/채널 링크", key: "blogUrl", placeholder: "https://blog.naver.com/..." },
                           { label: "메모", key: "note", placeholder: "이 브랜드 관련 메모" },
                         ] as { label: string; key: keyof BrandProfile; placeholder: string }[]).map(f => (
@@ -1165,11 +1230,9 @@ export default function SFA() {
                           <div className="form-label">대표 컬러</div>
                           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                             <input type="color" style={{ width: 38, height: 38, border: "1.5px solid var(--border)", borderRadius: "var(--radius-sm)", cursor: "pointer", padding: 2 }}
-                              value={profile.color}
-                              onChange={e => updateBrandProfile({ ...profile, color: e.target.value })} />
+                              value={profile.color} onChange={e => updateBrandProfile({ ...profile, color: e.target.value })} />
                             <input className="form-input" placeholder="#111111" value={profile.color}
                               onChange={e => updateBrandProfile({ ...profile, color: e.target.value })} />
-                            <div style={{ width: 38, height: 38, borderRadius: "var(--radius-sm)", background: profile.color, border: "1px solid var(--border)", flexShrink: 0 }} />
                           </div>
                         </div>
                         <button onClick={() => setEditingBrandId(null)} className="btn btn-primary btn-full">저장 완료</button>
@@ -1178,16 +1241,6 @@ export default function SFA() {
                   </div>
                 ))}
               </div>
-
-              <div className="card" style={{ background: "var(--toss-blue-light)", borderColor: "#BFDBFE", maxWidth: 540 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--toss-blue)", marginBottom: 10 }}>브랜드 설정 활용 방법</div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 2 }}>
-                  <div>· <strong>키워드</strong> — AI 글쓰기에 자동 반영 (쉼표로 구분)</div>
-                  <div>· <strong>해시태그</strong> — 인스타·스레드 글에 자동 추가</div>
-                  <div>· <strong>블로그 링크</strong> — 나중에 자동 발행 연동 시 사용</div>
-                  <div>· <strong>5개 브랜드</strong> — 매장별·채널별로 저장해두고 전환해서 사용하세요</div>
-                </div>
-              </div>
             </>
           )}
 
@@ -1195,15 +1248,14 @@ export default function SFA() {
           {nav === "admin" && (
             <>
               <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>관리자 진단</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", letterSpacing: -0.5 }}>관리자 진단</div>
                 <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>오류 발생 시 Claude가 자동 분석 · 해결 코드 생성 · 관리자 전용</div>
               </div>
-              {/* 수정 요청 게시판 */}
+
               <div className="card" style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>수정 요청 게시판</div>
-                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>개선이 필요한 내용을 등록하면 Claude가 1일 2회 자동으로 처리해요.</div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>개선이 필요한 내용을 등록하면 Claude가 자동으로 처리해요.</div>
 
-                {/* 새 요청 작성 */}
                 <div style={{ background: "var(--bg)", borderRadius: "var(--radius-md)", padding: 16, marginBottom: 16 }}>
                   <div className="form-field">
                     <div className="form-label">제목</div>
@@ -1215,12 +1267,11 @@ export default function SFA() {
                     <textarea className="form-input" style={{ minHeight: 80 }} placeholder="어떤 화면에서, 어떤 기능이 필요한지 자세히 적어주세요..."
                       value={newFix.content} onChange={e => setNewFix(p => ({ ...p, content: e.target.value }))} />
                   </div>
-                  {/* 이미지 드래그 */}
                   <div
                     onDragOver={e => { e.preventDefault(); setIsDraggingFix(true) }}
                     onDragLeave={() => setIsDraggingFix(false)}
                     onDrop={handleFixImageDrop}
-                    style={{ border: `1.5px dashed ${isDraggingFix ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", padding: "12px", textAlign: "center", cursor: "pointer", background: isDraggingFix ? "var(--toss-blue-light)" : "var(--bg-card)", marginBottom: 10, fontSize: 12, color: "var(--text-tertiary)" }}>
+                    style={{ border: `1.5px dashed ${isDraggingFix ? "var(--toss-blue)" : "var(--border)"}`, borderRadius: "var(--radius-sm)", padding: 12, textAlign: "center", cursor: "pointer", background: isDraggingFix ? "var(--toss-blue-light)" : "var(--bg-card)", marginBottom: 10, fontSize: 12, color: "var(--text-tertiary)" }}>
                     스크린샷을 여기에 드래그하거나
                     <label style={{ color: "var(--toss-blue)", fontWeight: 600, cursor: "pointer", marginLeft: 4 }}>
                       클릭해서 업로드
@@ -1237,7 +1288,7 @@ export default function SFA() {
                       {newFix.images.map((img, i) => (
                         <div key={i} style={{ position: "relative" }}>
                           <img src={img} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }} />
-                          <button onClick={() => setNewFix(p => ({ ...p, images: p.images.filter((_, j) => j !== i) }))}
+                          <button onClick={() => setNewFix(p => ({ ...p, images: p.images.filter((_,j)=>j!==i) }))}
                             style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "var(--danger)", color: "white", border: "none", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
                         </div>
                       ))}
@@ -1246,7 +1297,6 @@ export default function SFA() {
                   <button onClick={handleAddFix} disabled={!newFix.title.trim()} className="btn btn-primary btn-sm">요청 등록</button>
                 </div>
 
-                {/* 요청 목록 */}
                 {fixRequests.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "20px 0", fontSize: 13, color: "var(--text-tertiary)" }}>등록된 수정 요청이 없어요</div>
                 ) : (
@@ -1266,18 +1316,6 @@ export default function SFA() {
                           </div>
                         </div>
                         {req.content && <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 6 }}>{req.content}</div>}
-                        {req.images.length > 0 && (
-                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
-                            {req.images.map((img, i) => (
-                              <img key={i} src={img} alt="" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }} />
-                            ))}
-                          </div>
-                        )}
-                        {req.response && (
-                          <div style={{ marginTop: 8, padding: "8px 10px", background: "#E6F9F2", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-primary)" }}>
-                            <strong style={{ color: "var(--success)" }}>Claude 처리 결과:</strong> {req.response}
-                          </div>
-                        )}
                         <div style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>{new Date(req.createdAt).toLocaleString("ko-KR")}</div>
                       </div>
                     ))}
@@ -1285,21 +1323,19 @@ export default function SFA() {
                 )}
               </div>
 
-              {/* 관리자 진단 */}
               <div className="card" style={{ maxWidth: 600 }}>
                 <div className="form-field">
                   <div className="form-label">관리자 키</div>
-                  <input type="password" className="form-input"
-                    placeholder="SFA 관리자 키" value={adminKey} onChange={e => setAdminKey(e.target.value)} />
+                  <input type="password" className="form-input" placeholder="SFA 관리자 키" value={adminKey} onChange={e => setAdminKey(e.target.value)} />
                 </div>
                 <div className="form-field">
                   <div className="form-label">오류 내용</div>
                   <textarea className="form-input" style={{ minHeight: 120 }}
                     placeholder="오류 메시지, 스택 트레이스 등 붙여넣기..." value={diagError} onChange={e => setDiagError(e.target.value)} />
                 </div>
-                <PrimaryBtn onClick={handleDiag} disabled={diagLoading || !diagError || !adminKey}>
+                <button className="btn btn-primary btn-full" onClick={handleDiag} disabled={diagLoading || !diagError || !adminKey}>
                   {diagLoading ? "분석 중..." : "Claude 진단 요청"}
-                </PrimaryBtn>
+                </button>
                 {diagResult && (
                   <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
                     <div style={{ padding: 14, background: "#FFF4E0", borderRadius: "var(--radius-md)" }}>
@@ -1329,69 +1365,78 @@ export default function SFA() {
         </div>
       </main>
 
-      {/* ── 우측 패널 ── */}
-      <aside className="sfa-right-panel">
-        <div>
-          <div className="section-label">최근 생성</div>
-          {dbItems.length === 0 ? (
-            <div style={{ fontSize: 12, color: "var(--text-tertiary)", lineHeight: 1.7 }}>
-              아직 생성된 콘텐츠가 없어요.<br/>주제를 입력해 시작해보세요.
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {dbItems.slice(0, 5).map(item => {
-                const st = STATUS_STYLE[item.status as keyof typeof STATUS_STYLE] || STATUS_STYLE.draft
-                return (
-                  <button key={item.id}
-                    style={{ padding: "10px 12px", background: "var(--bg)", borderRadius: "var(--radius-sm)", border: "none", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.15s" }}
-                    onClick={() => { setActiveItem(item); setActiveChannel(item.channels[0] || "INSTAGRAM"); setNav("schedule") }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                      <span className={`badge ${st.cls}`}>{st.label}</span>
-                      <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{fmtDate(item.date)}</span>
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4, marginBottom: 4 }}>{item.topic}</div>
-                    <div style={{ display: "flex", gap: 3 }}>
-                      {item.channels.slice(0, 5).map(ch => (
-                        <div key={ch} className="status-dot" style={{ background: CHANNEL_META[ch as TChannel]?.color || "var(--border)" }} />
-                      ))}
-                    </div>
+      {/* ── 우측 요약 패널 (create 탭만) ── */}
+      {nav === "create" && !generating && (
+        <aside className={`right-panel-wrap ${rightOpen ? "expanded" : "collapsed"}`}>
+          <div className="right-panel-toggle-col">
+            <button className="right-panel-toggle" onClick={() => setRightOpen(v => !v)}
+              title={rightOpen ? "요약 닫기" : "요약 열기"}>
+              {rightOpen ? <IcoChevRight /> : <IcoChevLeft />}
+            </button>
+          </div>
+
+          {rightOpen && (
+            <div className="right-panel-content">
+              <div className="section-label">자동화 요약</div>
+
+              <div className="sum-box">
+                {([
+                  ["소스", { MANUAL: "직접 입력", DIVERSIFIED: "주제 다각화", URL: "URL 추출", FILE: "자료 기반" }[sourceType]],
+                  ["주제", topic || "—"],
+                  ["키워드", [...brandKws,...mainKws,...subKws].length > 0 ? `${[...brandKws,...mainKws,...subKws].length}개` : "—"],
+                  ["채널", `${channels.length}개 ON`],
+                  ["수량", `${count}편`],
+                  ["주기", { daily: "매일", weekly: "매주", biweekly: "격주", monthly: "매월" }[freq]],
+                ] as [string, string][]).map(([k, v]) => (
+                  <div key={k} className="sum-row">
+                    <span className="sum-k">{k}</span>
+                    <span className="sum-v" style={{ maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{v}</span>
+                  </div>
+                ))}
+                <div className="sum-divider" />
+                <div className="sum-row">
+                  <span className="sum-k">총 생성</span>
+                  <span className="sum-v total">{count * channels.length}개</span>
+                </div>
+              </div>
+
+              {/* 채널 미리보기 */}
+              <div>
+                <div className="section-label">선택된 채널</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {channels.length === 0 ? (
+                    <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>채널을 선택해 주세요</span>
+                  ) : channels.map(ch => {
+                    const m = CHANNEL_META[ch]
+                    return (
+                      <div key={ch} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", background: "var(--bg)", borderRadius: 6, border: `1px solid ${m.color}30` }}>
+                        <div className="status-dot" style={{ background: m.color }} />
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)" }}>{m.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div style={{ marginTop: "auto" }}>
+                <button className="btn btn-primary btn-full"
+                  onClick={handleGenerate}
+                  disabled={!topic.trim() && sourceType === "MANUAL"}
+                  style={{ fontSize: 14, fontWeight: 800 }}>
+                  ✦ 자동화 시작
+                </button>
+                {!d2Open && (
+                  <button className="btn btn-secondary btn-full" style={{ marginTop: 8 }}
+                    onClick={() => setD2Open(true)}>
+                    채널 편집
                   </button>
-                )
-              })}
-              <button className="btn-ghost" style={{ fontSize: 11, textAlign: "left", padding: "4px 0" }}
-                onClick={() => { loadHistory(); setNav("storage") }}>
-                전체 보기
-              </button>
+                )}
+              </div>
             </div>
           )}
-        </div>
+        </aside>
+      )}
 
-        <div>
-          <div className="section-label">채널 현황</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              { title: "AI 자동 생성",     desc: "주제만 입력하면 5채널 동시 생성", ok: true },
-              { title: "이미지 생성",       desc: "SVG 브랜드 카드 즉시 생성 가능",  ok: true },
-              { title: "복사 발행",         desc: "채널탭에서 내용 복사 후 직접 게시", ok: true },
-              { title: "페이플레이 발행",   desc: "홈페이지 API 연결 시 자동 발행",   ok: false },
-              { title: "카카오 채널",       desc: "카카오 채널 + API 심사 필요",       ok: false },
-              { title: "Instagram / Threads", desc: "Meta 앱 심사 필요",            ok: false },
-            ].map(tip => (
-              <div key={tip.title} style={{ padding: "9px 12px", background: tip.ok ? "#E6F9F2" : "var(--bg)", borderRadius: "var(--radius-sm)", borderLeft: `3px solid ${tip.ok ? "var(--success)" : "var(--border)"}` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>
-                  {tip.title}
-                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 600, color: tip.ok ? "var(--success)" : "var(--text-tertiary)" }}>{tip.ok ? "가능" : "미연동"}</span>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5 }}>{tip.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginTop: "auto", paddingTop: 16, borderTop: "1px solid var(--border-light)" }}>
-          <button className="btn btn-secondary btn-full" onClick={() => setNav("admin")}>관리자 진단</button>
-        </div>
-      </aside>
     </div>
   )
 }
