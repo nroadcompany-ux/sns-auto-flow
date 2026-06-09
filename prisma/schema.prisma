@@ -14,18 +14,35 @@ datasource db {
 
 /// 생성된 콘텐츠 묶음 (1회 자동화 실행 = 1 Content)
 model Content {
-  id          String    @id @default(cuid())
-  topic       String
-  angle       String    @default("일반")
-  sourceType  String    @default("MANUAL")
-  tone        String    @default("friendly")
-  channels    String    // JSON 배열 ["INSTAGRAM","THREADS",...]
-  contentJson String    // IGeneratedContent 전체 JSON
-  status      String    @default("draft")
-  scheduledAt DateTime?
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  posts       Post[]
+  id           String    @id @default(cuid())
+  topic        String
+  angle        String    @default("일반")
+  sourceType   String    @default("MANUAL")
+  tone         String    @default("friendly")
+  channels     String    // JSON 배열 ["INSTAGRAM","THREADS",...]
+  contentJson  String    // IGeneratedContent 전체 JSON
+  status       String    @default("draft")
+  scheduledAt  DateTime?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  // 영상 자동화 필드
+  type         String    @default("text")   // "text" | "video"
+  mediaUrl     String?                       // 완성된 MP4 URL
+  renderJobId  String?                       // Remotion Lambda 작업 ID
+  renderStatus String?   @default("pending") // pending|rendering|done|failed
+  posts        Post[]
+}
+
+/// 이미지 뱅크 — Midjourney 수동 업로드 + Flux 자동 생성 이미지 저장
+model ImageBank {
+  id        String   @id @default(cuid())
+  url       String
+  label     String
+  gender    String   @default("female") // female | male
+  situation String?  // POS | kiosk | tableorder | custom
+  source    String   @default("flux")   // midjourney | flux
+  prompt    String?
+  createdAt DateTime @default(now())
 }
 
 /// 채널별 발행 결과

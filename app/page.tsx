@@ -1,6 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback, useRef } from "react"
+import dynamic from "next/dynamic"
 import { CHANNEL_META, TChannel, TTone, TSourceType, TImageEngine, IScheduleItem } from "@/types"
+
+const VideoMaker = dynamic(() => import("@/components/VideoMaker"), { ssr: false })
 import {
   type SavedTopic, type SavedURL, type SavedMaterial, type BrandProfile, type FixRequest, DEFAULT_BRANDS,
   getTopics, addTopic, deleteTopic,
@@ -1300,22 +1303,9 @@ export default function SFA() {
                   </div>
                 )}
 
-                {/* 영상 생성 (준비 중) */}
+                {/* 영상 생성 (VideoMaker) */}
                 {visualMode==="video" && (
-                  <div className="flux-card" style={{textAlign:"center",padding:"48px 24px"}}>
-                    <div style={{fontSize:40,marginBottom:16}}>🎬</div>
-                    <div style={{fontSize:18,fontWeight:800,color:"var(--text-1)",marginBottom:8}}>영상 생성 — 준비 중</div>
-                    <div style={{fontSize:14,color:"var(--text-3)",lineHeight:1.8,marginBottom:20,maxWidth:480,margin:"0 auto 20px"}}>
-                      Remotion을 활용해 SNS 텍스트 콘텐츠를 자동으로<br/>
-                      카드뉴스 형식의 영상(MP4/WebM)으로 변환합니다.<br/>
-                      슬라이드 5장 · 1080×1080 · 인스타 릴스 최적화
-                    </div>
-                    <span className="coming-soon">준비 중</span>
-                    <div style={{marginTop:20,padding:"14px 18px",background:"var(--bg)",borderRadius:"var(--r-md)",fontSize:13,color:"var(--text-2)",textAlign:"left",maxWidth:420,margin:"20px auto 0"}}>
-                      <strong>기술 스택:</strong> Remotion + AWS Lambda<br/>
-                      <strong>예정 기능:</strong> 텍스트 → 카드뉴스 영상 자동 변환, 브랜드 컬러 적용, 자동 발행
-                    </div>
-                  </div>
+                  <VideoMaker brandName={brand.name} brandColor={brand.color} />
                 )}
               </>
             )}
